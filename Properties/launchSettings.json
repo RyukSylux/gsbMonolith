@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "gsbMonolith": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "AWS_HOST": "localhost",
+        "AWS_USER": "root",
+        "AWS_PASSWORD": ""
+      }
+    }
+  }
+}

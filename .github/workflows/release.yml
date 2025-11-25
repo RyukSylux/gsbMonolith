@@ -1,0 +1,62 @@
+﻿name: Build & Upload gsbMonolith
+on:
+  push:
+    tags:
+      - "v*"
+permissions:
+  contents: write
+jobs:
+  build_upload:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      
+      - name: Inject AWS secrets into Database.cs
+        run: |
+          $filePath = ".\DAO\Database.cs"
+          Write-Host "Cherchant le fichier: $filePath"
+          Write-Host "Fichiers présents: $(Get-ChildItem -Recurse -Filter 'Database.cs' | Select-Object -ExpandProperty FullName)"
+          
+          if (Test-Path $filePath) {
+            $content = Get-Content $filePath -Raw
+            
+            $content = $content -replace 'const string AWS_HOST = "DEFAULT_HOST"', 'const string AWS_HOST = "${{ secrets.AWS_HOST }}"'
+            $content = $content -replace 'const string AWS_USER = "DEFAULT_USER"', 'const string AWS_USER = "${{ secrets.AWS_USER }}"'
+            $content = $content -replace 'const string AWS_PASSWORD = "DEFAULT_PASSWORD"', 'const string AWS_PASSWORD = "${{ secrets.AWS_PASSWORD }}"'
+            
+            Set-Content $filePath $content
+            Write-Host "✓ Secrets injectés avec succès"
+          } else {
+            Write-Error "Fichier non trouvé: $filePath"
+            exit 1
+          }
+      
+      - name: Restore
+        run: dotnet restore
+      
+      - name: Build & Publish EXE
+        run: |
+          dotnet publish gsbMonolith.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            /p:PublishSingleFile=true `
+            /p:IncludeAllContentForSelfExtract=true `
+            -o publish
+      
+      - name: Rename exe
+        run: |
+          ren publish\gsbMonolith.exe gsbMonolith-${{ github.ref_name }}.exe
+      
+      - name: Upload exe to existing GitHub release
+        shell: bash
+        run: |
+          gh release upload "${{ github.ref_name }}" "publish/gsbMonolith-${{ github.ref_name }}.exe" --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

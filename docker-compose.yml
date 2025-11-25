@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mysql:8.1
+    container_name: gsb_mysql_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - /var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: gsb_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_SECRET: ${PMA_SECRET}
+      AWS_HOST: ${AWS_HOST}
+      AWS_USER: ${AWS_USER}
+      AWS_PASSWORD: ${AWS_PASSWORD}
+      LOCAL_HOST: ${LOCAL_HOST}
+      LOCAL_USER: ${LOCAL_USER}
+      LOCAL_PASSWORD: ${LOCAL_PASSWORD}
+    volumes:
+      - ./config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
+    ports:
+      - "8080:80"
