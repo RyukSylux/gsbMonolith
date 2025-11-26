@@ -14,6 +14,9 @@ namespace gsbMonolith.Forms
     {
         private readonly MedicineDAO medicineDAO = new MedicineDAO();
         private readonly User currentUser;
+        private bool isEditMode = false;
+        private int editingMedicineId = -1;
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MedicinesForm"/> class.
@@ -72,7 +75,11 @@ namespace gsbMonolith.Forms
         /// </summary>
         private void BtnAdd_Click(object sender, EventArgs e)
         {
+            isEditMode = false;
+            groupBoxAdd.Text = "Ajouter un médicament";
+            BtnSave.Text = "💾 Enregistrer";
             groupBoxAdd.Visible = !groupBoxAdd.Visible;
+            ClearFields();
         }
 
         /// <summary>
@@ -92,18 +99,36 @@ namespace gsbMonolith.Forms
                     Molecule = txtMolecule.Text
                 };
 
-                bool result = medicineDAO.Insert(med);
+                bool result;
 
-                if (result)
+                if (isEditMode)
                 {
-                    MessageBox.Show("✅ Médicament ajouté avec succès !");
-                    LoadMedicines();
-                    groupBoxAdd.Visible = false;
-                    ClearFields();
+                    // Mode update
+                    med.Id_medicine = editingMedicineId;
+
+                    result = medicineDAO.Update(med);
+
+                    if (result)
+                        MessageBox.Show("✅ Médicament mis à jour !");
+                    else
+                        MessageBox.Show("❌ Erreur lors de la mise à jour.");
                 }
                 else
                 {
-                    MessageBox.Show("❌ Erreur lors de l’ajout du médicament.");
+                    // Mode insertion
+                    result = medicineDAO.Insert(med);
+
+                    if (result)
+                        MessageBox.Show("✅ Médicament ajouté !");
+                    else
+                        MessageBox.Show("❌ Erreur lors de l'ajout.");
+                }
+
+                if (result)
+                {
+                    LoadMedicines();
+                    groupBoxAdd.Visible = false;
+                    ClearFields();
                 }
             }
             catch (Exception ex)
@@ -111,6 +136,7 @@ namespace gsbMonolith.Forms
                 MessageBox.Show($"Erreur : {ex.Message}");
             }
         }
+
 
         /// <summary>
         /// Deletes the selected medicine after confirmation.
@@ -140,6 +166,40 @@ namespace gsbMonolith.Forms
                 }
             }
         }
+
+        private void BtnEdit_Click(object sender, EventArgs e)
+        {
+            if (dgvMedicines.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Veuillez sélectionner un médicament à modifier.");
+                return;
+            }
+
+            // Récupération ID
+            editingMedicineId = (int)dgvMedicines.SelectedRows[0].Cells["Id_medicine"].Value;
+
+            // Charger les infos via DAO
+            Medicine? med = medicineDAO.GetById(editingMedicineId);
+
+            if (med == null)
+            {
+                MessageBox.Show("Erreur : médicament introuvable.");
+                return;
+            }
+
+            // Passer en mode édition
+            isEditMode = true;
+            groupBoxAdd.Text = "Modifier un médicament";
+            BtnSave.Text = "💾 Mettre à jour";
+            groupBoxAdd.Visible = true;
+
+            // Remplir les champs
+            txtDosage.Text = med.Dosage;
+            txtName.Text = med.Name;
+            txtDescription.Text = med.Description;
+            txtMolecule.Text = med.Molecule;
+        }
+
 
         /// <summary>
         /// Clears all input fields used for adding a new medicine.

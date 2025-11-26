@@ -57,6 +57,48 @@ namespace gsbMonolith.DAO
                 }
             }
         }
+        /// <summary>
+        /// Get a user by ID.
+        /// </summary>
+        /// <param name="userId">The user's ID.</param>
+        /// <returns>The <see cref="User"/> object if successful; otherwise, null.</returns>
+        public User? GetUserById(int userId)
+        {
+            using (var connection = db.GetConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    MySqlCommand myCommand = new MySqlCommand
+                    {
+                        Connection = connection,
+                        CommandText = @"SELECT * FROM Users WHERE id_user = @userId;"
+                    };
+                    myCommand.Parameters.AddWithValue("@userId", userId);
+
+                    using var myReader = myCommand.ExecuteReader();
+                    if (myReader.Read())
+                    {
+                        int id = myReader.GetInt32("id_user");
+                        string name = myReader.GetString("name");
+                        string firstname = myReader.GetString("firstname");
+                        string email = myReader.GetString("email");
+                        bool role = myReader.GetBoolean("role");
+                        connection.Close();
+                        return new User(id, name, firstname, role, email);
+                    }
+
+                    connection.Close();
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error retrieving user: {ex.Message}", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Registers a new user.

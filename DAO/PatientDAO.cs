@@ -53,43 +53,6 @@ namespace gsbMonolith.DAO
         }
 
         /// <summary>
-        /// Creates a new patient in the database.
-        /// </summary>
-        /// <param name="id_user">The ID of the user who added the patient.</param>
-        /// <param name="name">The patient's last name.</param>
-        /// <param name="age">The patient's age.</param>
-        /// <param name="firstname">The patient's first name.</param>
-        /// <param name="gender">The patient's gender.</param>
-        /// <returns>True if creation was successful; otherwise, false.</returns>
-        public bool CreatePatient(int id_user, string name, int age, string firstname, string gender)
-        {
-            using (var connection = db.GetConnection())
-            {
-                try
-                {
-                    connection.Open();
-                    string query = @"INSERT INTO Patients (id_user, name, age, firstname, gender) 
-                                     VALUES (@id_user, @name, @age, @firstname, @gender);";
-                    MySqlCommand cmd = new MySqlCommand(query, connection);
-                    cmd.Parameters.AddWithValue("@id_user", id_user);
-                    cmd.Parameters.AddWithValue("@name", name);
-                    cmd.Parameters.AddWithValue("@age", age);
-                    cmd.Parameters.AddWithValue("@firstname", firstname);
-                    cmd.Parameters.AddWithValue("@gender", gender);
-
-                    int rowsAffected = cmd.ExecuteNonQuery();
-                    connection.Close();
-                    return rowsAffected > 0;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error CreatePatient: " + ex.Message);
-                    return false;
-                }
-            }
-        }
-
-        /// <summary>
         /// Inserts a patient object into the database.
         /// </summary>
         /// <param name="patient">The <see cref="Patient"/> object to insert.</param>

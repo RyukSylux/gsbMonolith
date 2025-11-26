@@ -18,6 +18,7 @@ namespace gsbMonolith.Forms
         private readonly PrescriptionDAO prescriptionDAO = new PrescriptionDAO();
         private readonly PatientDAO patientDAO = new PatientDAO();
         private readonly MedicineDAO medicineDAO = new MedicineDAO();
+        private readonly UserDAO userDAO = new UserDAO();
         private readonly User currentUser;
 
         /// <summary>
@@ -257,7 +258,9 @@ namespace gsbMonolith.Forms
                                       .Select(m => (medicineDAO.GetById(m.Id_medicine), m.Quantity))
                                       .ToList();
 
-            PdfExporter.ExportPrescription(presc, patient, currentUser, meds);
+            var doctor = userDAO.GetUserById(presc.Id_user);
+
+            PdfExporter.ExportPrescription(presc, patient, doctor, meds);
         }
 
         /// <summary>

@@ -156,8 +156,7 @@ namespace gsbMonolith.DAO
                         string userFirst = myReader["user_firstname"]?.ToString() ?? "";
                         string userName = myReader["user_name"]?.ToString() ?? "";
 
-                        med.Description = (med.Description ?? "") +
-                                          $" (Added by {userFirst} {userName})";
+                        med.Description = (med.Description ?? "");
                     }
                 }
                 catch (Exception ex)

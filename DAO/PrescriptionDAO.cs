@@ -50,33 +50,6 @@ namespace gsbMonolith.DAO
         }
 
         /// <summary>
-        /// Creates a new prescription.
-        /// </summary>
-        /// <param name="prescription">The <see cref="Prescription"/> object to create.</param>
-        /// <returns>True if creation was successful; otherwise, false.</returns>
-        public bool CreatePrescription(Prescription prescription)
-        {
-            using var connection = db.GetConnection();
-            try
-            {
-                connection.Open();
-                MySqlCommand cmd = new MySqlCommand(
-                    @"INSERT INTO Prescription (id_user, id_patient, validity)
-                      VALUES (@id_user, @id_patient, @validity);", connection);
-                cmd.Parameters.AddWithValue("@id_user", prescription.Id_user);
-                cmd.Parameters.AddWithValue("@id_patient", prescription.Id_patient);
-                cmd.Parameters.AddWithValue("@validity", prescription.Date);
-
-                return cmd.ExecuteNonQuery() > 0;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error CreatePrescription: " + ex.Message);
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Creates a prescription along with associated medicines and quantities.
         /// </summary>
         /// <param name="prescription">The <see cref="Prescription"/> object to create.</param>
@@ -155,10 +128,10 @@ namespace gsbMonolith.DAO
                     prescriptions.Add(new
                     {
                         Id = reader.GetInt32("id_prescription"),
-                        Validity = reader.GetDateTime("validity").ToString("yyyy-MM-dd"),
-                        Doctor = $"{reader["doctor_firstname"]} {reader["doctor_name"]}",
+                        Validité = reader.GetDateTime("validity").ToString("yyyy-MM-dd"),
+                        Docteur = $"{reader["doctor_firstname"]} {reader["doctor_name"]}",
                         Patient = $"{reader["patient_firstname"]} {reader["patient_name"]} ({reader["patient_age"]} years)",
-                        Medicines = reader["medicines"] != DBNull.Value ? reader["medicines"].ToString() : "None"
+                        Médicaments = reader["medicines"] != DBNull.Value ? reader["medicines"].ToString() : "None"
                     });
                 }
             }

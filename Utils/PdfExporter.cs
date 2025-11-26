@@ -95,7 +95,7 @@ namespace gsbMonolith.Utils
 
                         string medNameSafe = med?.Name ?? "[Nom manquant]";
                         string dosageSafe = med?.Dosage ?? "";
-                        string display = $"{medNameSafe} {dosageSafe}".Trim();
+                        string display = $"{medNameSafe} {dosageSafe} mg".Trim();
 
                         table.AddCell(new Cell().Add(new Paragraph(display)));
                         table.AddCell(new Cell().Add(new Paragraph(qty.ToString())));

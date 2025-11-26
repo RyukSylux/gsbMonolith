@@ -72,6 +72,16 @@ namespace gsbMonolith.Forms
             BtnRefresh.Text = "🔄 Rafraîchir";
             BtnRefresh.UseVisualStyleBackColor = true;
             BtnRefresh.Click += BtnRefresh_Click;
+            // BtnEdit
+            BtnEdit = new Button();
+            BtnEdit.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            BtnEdit.Location = new Point(280, 25);
+            BtnEdit.Name = "BtnEdit";
+            BtnEdit.Size = new Size(110, 30);
+            BtnEdit.TabIndex = 5;
+            BtnEdit.Text = "✏️ Modifier";
+            BtnEdit.UseVisualStyleBackColor = true;
+            BtnEdit.Click += BtnEdit_Click;
             // 
             // BtnAdd
             // 
@@ -198,6 +208,7 @@ namespace gsbMonolith.Forms
             Controls.Add(groupBoxAdd);
             Controls.Add(BtnDelete);
             Controls.Add(BtnAdd);
+            Controls.Add(BtnEdit);
             Controls.Add(BtnRefresh);
             Controls.Add(dgvMedicines);
             Controls.Add(Title_label);
@@ -217,6 +228,7 @@ namespace gsbMonolith.Forms
         private DataGridView dgvMedicines;
         private Button BtnRefresh;
         private Button BtnAdd;
+        private Button BtnEdit;
         private Button BtnDelete;
         private GroupBox groupBoxAdd;
         private TextBox txtDosage;
