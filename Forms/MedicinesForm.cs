@@ -166,7 +166,12 @@ namespace gsbMonolith.Forms
                 }
             }
         }
-
+        /// <summary>
+        /// Edit the selected medicine after confirmation.
+        /// </summary>
+        /// <remarks>If no medicine is selected in the data grid, the method displays a message and does
+        /// not enter edit mode. The method loads the selected medicine's details into the input fields for
+        /// editing.</remarks>
         private void BtnEdit_Click(object sender, EventArgs e)
         {
             if (dgvMedicines.SelectedRows.Count == 0)

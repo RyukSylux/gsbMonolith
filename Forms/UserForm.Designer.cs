@@ -117,7 +117,7 @@
             // dgvUsers
             // 
             dgvUsers.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvUsers.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
+            dgvUsers.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             dgvUsers.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvUsers.Location = new Point(256, 71);
             dgvUsers.Name = "dgvUsers";
@@ -126,6 +126,9 @@
             dgvUsers.TabIndex = 8;
             dgvUsers.Visible = false;
             dgvUsers.SelectionChanged += DgvUsers_SelectionChanged;
+            dgvUsers.BackgroundColor = Color.White;
+            dgvUsers.BorderStyle = BorderStyle.Fixed3D;
+            dgvUsers.DataBindingComplete += DgvUsers_DataBindingComplete;
             // 
             // gbModifyUser
             // 

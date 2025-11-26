@@ -223,5 +223,17 @@ namespace gsbMonolith.Forms
             MedicinesForm f = new MedicinesForm(connectedUser);
             f.Show();
         }
+        /// <summary>
+        /// Auto size DataGridView height after data binding is complete.
+        /// </summary>
+        private void DgvUsers_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            int totalHeight = dgvUsers.ColumnHeadersHeight;
+            foreach (DataGridViewRow row in dgvUsers.Rows)
+            {
+                totalHeight += row.Height;
+            }
+            dgvUsers.Height = totalHeight + 2;
+        }
     }
 }
