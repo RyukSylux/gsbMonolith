@@ -9,30 +9,48 @@ namespace gsbMonolith
     {
         [DllImport("kernel32.dll")]
         private static extern bool AllocConsole();
+
+        [DllImport("kernel32.dll")]
+        private static extern bool FreeConsole();
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-
             ApplicationConfiguration.Initialize();
+
 #if DEBUG
             AllocConsole();
-            var UserDao = new UserDAO();
-            var connectedUser = UserDao.Login("thomas.robert@clinic.fr", "password");
+#endif
+
+            Form? formToRun = null;
+
+#if DEBUG
+            var userDao = new UserDAO();
+            var connectedUser = userDao.Login("thomas.robert@clinic.fr", "password");
             if (connectedUser == null)
             {
                 MessageBox.Show("Échec de la connexion. Veuillez vérifier vos identifiants.");
             }
             else
             {
-                Application.Run(new Forms.UserForm(connectedUser));
+                formToRun = new UserForm(connectedUser);
             }
 #else
-            Application.Run(new Forms.MainForm());
+            formToRun = new MainForm();
+#endif
+
+            if (formToRun != null)
+            {
+                formToRun.FormClosed += (s, e) => Application.Exit();
+
+                Application.Run(formToRun);
+            }
+
+#if DEBUG
+            FreeConsole();
 #endif
         }
     }
