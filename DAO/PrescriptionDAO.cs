@@ -171,54 +171,84 @@ namespace gsbMonolith.DAO
         }
 
         /// <summary>
-        /// Updates a prescription's validity date and its medicines/quantities.
+        /// Updates a prescription's validity date. 
+        /// Medicines are updated only if the provided list differs from the existing one.
         /// </summary>
         /// <param name="id_prescription">The ID of the prescription.</param>
         /// <param name="newValidity">The new validity date.</param>
-        /// <param name="medicines">List of medicines and quantities.</param>
-        /// <returns>True if update was successful; otherwise, false.</returns>
+        /// <param name="medicines">List of medicines and quantities to compare against the existing ones.</param>
+        /// <returns>True if the update was successful; otherwise, false.</returns>
+
         public bool UpdatePrescription(int id_prescription, string newValidity, List<(int Id_medicine, int Quantity)> medicines)
         {
             using var connection = db.GetConnection();
-            MySqlTransaction? transaction = null;
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
 
             try
             {
-                connection.Open();
-                transaction = connection.BeginTransaction();
+                // Update prescription only
+                using var updateCmd = new MySqlCommand(
+                    "UPDATE Prescription SET validity = @validity WHERE id_prescription = @id;",
+                    connection, transaction);
 
-                MySqlCommand cmd = new MySqlCommand(
-                    @"UPDATE Prescription SET validity = @validity WHERE id_prescription = @id;", connection, transaction);
-                cmd.Parameters.AddWithValue("@validity", newValidity);
-                cmd.Parameters.AddWithValue("@id", id_prescription);
-                cmd.ExecuteNonQuery();
+                updateCmd.Parameters.AddWithValue("@validity", newValidity);
+                updateCmd.Parameters.AddWithValue("@id", id_prescription);
+                updateCmd.ExecuteNonQuery();
 
-                MySqlCommand delCmd = new MySqlCommand(
-                    @"DELETE FROM Appartient WHERE id_prescription = @id;", connection, transaction);
-                delCmd.Parameters.AddWithValue("@id", id_prescription);
-                delCmd.ExecuteNonQuery();
+                // Fetch existing medicines
+                List<(int Id_medicine, int Quantity)> old = new();
 
-                foreach (var med in medicines)
+                using (var selectCmd = new MySqlCommand(
+                    "SELECT id_medicine, quantity FROM Appartient WHERE id_prescription = @id",
+                    connection, transaction))
                 {
-                    MySqlCommand medCmd = new MySqlCommand(
-                        @"INSERT INTO Appartient (id_prescription, id_medicine, quantity)
-                          VALUES (@id_prescription, @id_medicine, @quantity);", connection, transaction);
-                    medCmd.Parameters.AddWithValue("@id_prescription", id_prescription);
-                    medCmd.Parameters.AddWithValue("@id_medicine", med.Id_medicine);
-                    medCmd.Parameters.AddWithValue("@quantity", med.Quantity);
-                    medCmd.ExecuteNonQuery();
+                    selectCmd.Parameters.AddWithValue("@id", id_prescription);
+                    using var reader = selectCmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        old.Add((reader.GetInt32(0), reader.GetInt32(1)));
+                    }
+                }
+
+                // Compare lists
+                bool changed = !old.OrderBy(x => x.Id_medicine)
+                                   .SequenceEqual(medicines.OrderBy(x => x.Id_medicine));
+
+                if (changed)
+                {
+                    // Clear old meds
+                    using var delCmd = new MySqlCommand(
+                        "DELETE FROM Appartient WHERE id_prescription = @id;",
+                        connection, transaction);
+                    delCmd.Parameters.AddWithValue("@id", id_prescription);
+                    delCmd.ExecuteNonQuery();
+
+                    // Insert new meds
+                    foreach (var med in medicines)
+                    {
+                        using var ins = new MySqlCommand(
+                            @"INSERT INTO Appartient (id_prescription, id_medicine, quantity)
+                      VALUES (@id_prescription, @id_medicine, @quantity);",
+                            connection, transaction);
+
+                        ins.Parameters.AddWithValue("@id_prescription", id_prescription);
+                        ins.Parameters.AddWithValue("@id_medicine", med.Id_medicine);
+                        ins.Parameters.AddWithValue("@quantity", med.Quantity);
+                        ins.ExecuteNonQuery();
+                    }
                 }
 
                 transaction.Commit();
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine("Error UpdatePrescription: " + ex.Message);
-                try { transaction?.Rollback(); } catch { }
+                try { transaction.Rollback(); } catch { }
                 return false;
             }
         }
+
 
         /// <summary>
         /// Deletes a prescription and its associated medicines.
