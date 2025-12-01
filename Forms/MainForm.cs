@@ -34,9 +34,11 @@ namespace gsbMonolith.Forms
             if (connectedUser != null)
             {
                 var userForm = new UserForm(connectedUser);
+                userForm.FormClosed += (s2, e2) => this.Close();
                 userForm.Show();
-                this.Close();
+                this.Hide();
             }
+
             else
             {
                 MessageBox.Show("Échec de la connexion. Veuillez vérifier vos identifiants.");
@@ -52,7 +54,10 @@ namespace gsbMonolith.Forms
         /// <param name="e">Event arguments.</param>
         private void btnRegister_Click(object sender, EventArgs e)
         {
-            this.Close();
+            var reg = new RegisterForm();
+            reg.FormClosed += (s2, e2) => this.Close();
+            reg.Show();
+            this.Hide();
             new RegisterForm().Show();
         }
     }

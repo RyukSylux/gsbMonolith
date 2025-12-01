@@ -44,7 +44,11 @@ namespace gsbMonolith
 
             if (formToRun != null)
             {
-                formToRun.FormClosed += (s, e) => Application.Exit();
+                formToRun.FormClosed += (s, e) =>
+                {
+                    if (Application.OpenForms.Count == 0)
+                        Application.ExitThread();
+                };
 
                 Application.Run(formToRun);
             }
