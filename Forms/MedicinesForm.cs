@@ -6,23 +6,12 @@ using System.Windows.Forms;
 
 namespace gsbMonolith.Forms
 {
-    /// <summary>
-    /// Represents the window used to display, add, refresh, and delete medicines.
-    /// Loads medicines from the database and allows the connected user to manage them.
-    /// </summary>
     public partial class MedicinesForm : Form
     {
         private readonly MedicineDAO medicineDAO = new MedicineDAO();
         private readonly User currentUser;
         private bool isEditMode = false;
         private int editingMedicineId = -1;
-
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MedicinesForm"/> class.
-        /// Loads all medicines and configures the grid.
-        /// </summary>
-        /// <param name="user">The currently connected user, used to associate new medicines.</param>
         public MedicinesForm(User user)
         {
             InitializeComponent();
@@ -31,11 +20,6 @@ namespace gsbMonolith.Forms
 
             dgvMedicines.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         }
-
-        /// <summary>
-        /// Loads all medicines from the database and binds them to the DataGridView.
-        /// Also configures column headers and visibility.
-        /// </summary>
         private void LoadMedicines()
         {
             try
@@ -61,18 +45,10 @@ namespace gsbMonolith.Forms
                 MessageBox.Show($"Erreur lors du chargement des médicaments : {ex.Message}");
             }
         }
-
-        /// <summary>
-        /// Reloads the medicine list from the database.
-        /// </summary>
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
             LoadMedicines();
         }
-
-        /// <summary>
-        /// Shows or hides the panel used to add a new medicine.
-        /// </summary>
         private void BtnAdd_Click(object sender, EventArgs e)
         {
             isEditMode = false;
@@ -81,11 +57,6 @@ namespace gsbMonolith.Forms
             groupBoxAdd.Visible = !groupBoxAdd.Visible;
             ClearFields();
         }
-
-        /// <summary>
-        /// Saves a new medicine to the database using the values entered in the form.
-        /// If successful, refreshes the list and clears the input fields.
-        /// </summary>
         private void BtnSave_Click(object sender, EventArgs e)
         {
             try
@@ -136,11 +107,6 @@ namespace gsbMonolith.Forms
                 MessageBox.Show($"Erreur : {ex.Message}");
             }
         }
-
-
-        /// <summary>
-        /// Deletes the selected medicine after confirmation.
-        /// </summary>
         private void BtnDelete_Click(object sender, EventArgs e)
         {
             if (dgvMedicines.SelectedRows.Count == 0)
@@ -166,12 +132,6 @@ namespace gsbMonolith.Forms
                 }
             }
         }
-        /// <summary>
-        /// Edit the selected medicine after confirmation.
-        /// </summary>
-        /// <remarks>If no medicine is selected in the data grid, the method displays a message and does
-        /// not enter edit mode. The method loads the selected medicine's details into the input fields for
-        /// editing.</remarks>
         private void BtnEdit_Click(object sender, EventArgs e)
         {
             if (dgvMedicines.SelectedRows.Count == 0)
@@ -204,11 +164,6 @@ namespace gsbMonolith.Forms
             txtDescription.Text = med.Description;
             txtMolecule.Text = med.Molecule;
         }
-
-
-        /// <summary>
-        /// Clears all input fields used for adding a new medicine.
-        /// </summary>
         private void ClearFields()
         {
             txtDosage.Clear();

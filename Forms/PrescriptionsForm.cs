@@ -8,11 +8,6 @@ using gsbMonolith.Utils;
 
 namespace gsbMonolith.Forms
 {
-    /// <summary>
-    /// Form used to display, create, edit, delete, and export prescriptions.
-    /// Allows selecting a patient, choosing medications, and assigning quantities.
-    /// All operations are linked to the currently logged user (doctor).
-    /// </summary>
     public partial class PrescriptionsForm : Form
     {
         private readonly PrescriptionDAO prescriptionDAO = new PrescriptionDAO();
@@ -20,17 +15,7 @@ namespace gsbMonolith.Forms
         private readonly MedicineDAO medicineDAO = new MedicineDAO();
         private readonly UserDAO userDAO = new UserDAO();
         private readonly User currentUser;
-
-        /// <summary>
-        /// If set, indicates that the user is currently editing an existing prescription.
-        /// If null → a new prescription will be created.
-        /// </summary>
         private int? editingPrescriptionId = null;
-
-        /// <summary>
-        /// Initializes the form and loads patients, medicines and existing prescriptions.
-        /// </summary>
-        /// <param name="user">Connected user creating/editing the prescriptions.</param>
         public PrescriptionsForm(User user)
         {
             InitializeComponent();
@@ -39,10 +24,6 @@ namespace gsbMonolith.Forms
             LoadMedicinesGrid();
             LoadPrescriptions();
         }
-
-        /// <summary>
-        /// Loads the list of patients and fills the ComboBox with their names.
-        /// </summary>
         private void LoadPatients()
         {
             try
@@ -61,15 +42,6 @@ namespace gsbMonolith.Forms
                 MessageBox.Show("Erreur lors du chargement des patients : " + ex.Message);
             }
         }
-
-        /// <summary>
-        /// Clears and reloads the medicines grid. Each row includes:
-        /// - A checkbox (selection)
-        /// - The medicine ID
-        /// - The name
-        /// - The dosage
-        /// - A quantity field
-        /// </summary>
         private void LoadMedicinesGrid()
         {
             dgvMedicines.Rows.Clear();
@@ -86,38 +58,18 @@ namespace gsbMonolith.Forms
                 MessageBox.Show("Erreur lors du chargement des médicaments : " + ex.Message);
             }
         }
-
-        /// <summary>
-        /// Loads all existing prescriptions into the prescriptions DataGridView.
-        /// </summary>
         private void LoadPrescriptions()
         {
             dgvPrescriptions.DataSource = prescriptionDAO.GetAllPrescriptions();
             dgvPrescriptions.Columns["Id"].Visible = false;
         }
-
-        /// <summary>
-        /// Refresh button handler. Reloads prescriptions from the database.
-        /// </summary>
         private void BtnRefresh_Click(object sender, EventArgs e) => LoadPrescriptions();
-
-        /// <summary>
-        /// Displays the creation/edit group box and resets fields.
-        /// Also clears edit mode if necessary.
-        /// </summary>
         private void BtnAdd_Click(object sender, EventArgs e)
         {
             groupBoxAdd.Visible = !groupBoxAdd.Visible;
             ClearFields();
             editingPrescriptionId = null;
         }
-
-        /// <summary>
-        /// When a prescription row is clicked, loads its details for editing:
-        /// - Selected patient
-        /// - Date
-        /// - Medicines and quantities (pre-filled)
-        /// </summary>
         private void DgvPrescriptions_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
@@ -154,13 +106,6 @@ namespace gsbMonolith.Forms
 
             groupBoxAdd.Visible = true;
         }
-
-        /// <summary>
-        /// Saves a prescription:
-        /// - Validates patient selection
-        /// - Validates medicines and quantities
-        /// - Creates or updates a prescription
-        /// </summary>
         private void BtnSave_Click(object sender, EventArgs e)
         {
             if (cmbPatients.SelectedValue == null) return;
@@ -215,10 +160,6 @@ namespace gsbMonolith.Forms
                 MessageBox.Show("❌ Erreur lors de l'enregistrement.");
             }
         }
-
-        /// <summary>
-        /// Deletes the selected prescription after confirmation.
-        /// </summary>
         private void BtnDelete_Click(object sender, EventArgs e)
         {
             if (dgvPrescriptions.SelectedRows.Count == 0) return;
@@ -234,13 +175,6 @@ namespace gsbMonolith.Forms
                     MessageBox.Show("❌ Erreur lors de la suppression.");
             }
         }
-
-        /// <summary>
-        /// Exports a selected prescription to PDF including:
-        /// - Patient
-        /// - Doctor
-        /// - Medicines list and quantities
-        /// </summary>
         private void BtnExportPdf_Click(object sender, EventArgs e)
         {
             if (dgvPrescriptions.SelectedRows.Count == 0)
@@ -262,10 +196,6 @@ namespace gsbMonolith.Forms
 
             PdfExporter.ExportPrescription(presc, patient, doctor, meds);
         }
-
-        /// <summary>
-        /// Resets input fields and unselects all medicines.
-        /// </summary>
         private void ClearFields()
         {
             dtpValidity.Value = DateTime.Now;
