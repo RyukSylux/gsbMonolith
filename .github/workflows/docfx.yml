@@ -26,19 +26,19 @@ jobs:
       - name: Install DocFX
         run: dotnet tool update -g docfx
 
-      - name: Generate DocFX metadata from XML
-        run: docfx metadata docfx.json
+      - name: Copy README.md into docfx/index.md
+        run: copy README.md docfx\\index.md
 
-      - name: Prepare index.md for DocFX
-        run: copy README.md index.md
+      - name: Generate DocFX metadata
+        run: docfx metadata docfx/docfx.json
 
       - name: Build DocFX site
-        run: docfx build docfx.json
+        run: docfx build docfx/docfx.json
       
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: docfx/_site
 
   deploy:
     runs-on: ubuntu-latest
