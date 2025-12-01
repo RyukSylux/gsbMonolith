@@ -191,7 +191,11 @@ namespace gsbMonolith.Forms
             DialogResult result = MessageBox.Show("Voulez-vous vous déconnecter ?", "Déconnexion", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
+#if DEBUG
                 this.Hide();
+#else
+                this.Close();
+#endif
                 MainForm loginForm = new MainForm();
                 loginForm.Show();
             }

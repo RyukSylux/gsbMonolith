@@ -35,7 +35,7 @@ namespace gsbMonolith.Forms
             {
                 var userForm = new UserForm(connectedUser);
                 userForm.Show();
-                this.Hide();
+                this.Close();
             }
             else
             {
@@ -52,7 +52,7 @@ namespace gsbMonolith.Forms
         /// <param name="e">Event arguments.</param>
         private void btnRegister_Click(object sender, EventArgs e)
         {
-            this.Hide();
+            this.Close();
             new RegisterForm().Show();
         }
     }
