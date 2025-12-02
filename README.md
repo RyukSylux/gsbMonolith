@@ -1,238 +1,270 @@
-# 💊 GSB Monolith — Application Desktop de Gestion Médicale
+# DOCUMENTATION TECHNIQUE COMPLÈTE – PROJET GSB MONOLITH
 
-## 🧩 Description du projet
-
-**GSB Monolith** est une application **desktop C# (.NET Windows Forms)** développée pour le groupe **GSB (Galaxy Swiss Bourdin)**.
-Ce logiciel a pour objectif de **centraliser et gérer les prescriptions médicales**, les **patients**, les **médicaments** et les **utilisateurs (médecins, pharmaciens, administrateurs)** dans un **système monolithique connecté à une base de données MySQL**.
-
----
-
-## ⚙️ Fonctionnalités principales
-
-### 👤 Gestion des utilisateurs
-
-* Connexion sécurisée (mot de passe haché SHA256)
-* Rôles utilisateurs :
-
-  * **Médecins** : création et gestion des prescriptions
-  * **Administrateurs** : supervision générale
-
-### 🧍 Gestion des patients
-
-* Création, consultation, modification et suppression de patients
-* Informations stockées : nom, prénom, âge, genre, utilisateur associé (médecin référent)
-
-### 💊 Gestion des médicaments
-
-* Référencement des médicaments avec :
-
-  * Nom
-  * Description
-  * Dosage
-  * Molécule
-  * Pharmacien référent
-
-### 📜 Gestion des prescriptions
-
-* Création de prescriptions liées à un patient et un médecin
-* Ajout automatique des médicaments via la table **Appartient**
-* Date de validité, quantité prescrite
-* Transaction SQL pour garantir la cohérence entre les tables `Prescription` et `Appartient`
+![C#](https://img.shields.io/badge/C%23-11.0-blue?logo=c-sharp)
+![.NET Framework](https://img.shields.io/badge/.NET-6.0-blueviolet?logo=.net)
+![Windows Forms](https://img.shields.io/badge/Windows_Forms-WinForms-blue)
+![MySQL](https://img.shields.io/badge/MySQL-8.1-orange?logo=mysql)
+![Docker](https://img.shields.io/badge/Docker-Powered-blue?logo=docker)
+![Licence](https://img.shields.io/badge/Licence-MIT-green)
 
 ---
 
-## 🗃️ Structure de la base de données (MySQL)
+## 1. CONTEXTE ET OBJECTIFS DU PROJET
 
-| Table            | Description                                          | Colonnes principales                                                   |
-| ---------------- | ---------------------------------------------------- | ---------------------------------------------------------------------- |
-| **Users**        | Contient les comptes utilisateurs                    | `id_user`, `firstname`, `role`, `name`, `email`, `password`           |
-| **Patients**     | Gère les informations patient                        | `id_patient`, `id_user`, `name`, `firstname`, `age`, `gender`        |
-| **Medicine**     | Liste les médicaments disponibles                    | `id_medicine`, `id_user`, `name`, `description`, `dosage`, `molecule` |
-| **Prescription** | Enregistre les prescriptions faites par les médecins | `id_prescription`, `id_user`, `id_patient`, `quantity`, `validity`   |
-| **Appartient**   | Table de liaison entre `Prescription` et `Medicine`  | `id_prescription`, `id_medicine`                                       |
+### 1.1. Présentation du Mandat GSB
 
----
+Le laboratoire **Galaxy Swiss Bourdin (GSB)**, acteur majeur de l'industrie pharmaceutique, a mandaté la réalisation d'une application de bureau dans le cadre de la modernisation de son système d'information. Ce projet, réalisé dans le contexte de l'épreuve E4 "Support et mise à disposition de services informatiques" du **BTS SIO (Services Informatiques aux Organisations)**, vise à remplacer les processus manuels et fragmentés (fichiers Excel, documents papier) par une solution centralisée, robuste et sécurisée.
 
-## 🧱 Architecture du projet
+Le système actuel présentait des risques majeurs :
+- **Hétérogénéité des données** : Pas de format standardisé pour les informations sur les patients et les prescriptions.
+- **Manque de traçabilité** : Difficulté à suivre l'historique des modifications et à identifier les responsables.
+- **Risques de sécurité** : Informations sensibles stockées sans contrôle d'accès adéquat.
+- **Perte de temps et d'efficacité** : Processus de saisie et de recherche lents et redondants.
 
-```
-gsbMonolith/
-│
-├── DAO                    → Accès aux données (Data Access Object)
-│   ├── AppartientDAO.cs
-│   ├── Database.cs        → Connexion à MySQL
-│   ├── MedicineDAO.cs
-│   ├── PatientDAO.cs
-│   ├── PrescriptionDAO.cs
-│   └── UserDAO.cs
-├── Forms                  → Interfaces Windows Forms
-│   ├── MainForm.Designer.cs
-│   ├── MainForm.cs
-│   ├── MainForm.resx
-│   ├── MedicinesForm.Designer.cs
-│   ├── MedicinesForm.cs
-│   ├── MedicinesForm.resx
-│   ├── PatientsForm.Designer.cs
-│   ├── PatientsForm.cs
-│   ├── PatientsForm.resx
-│   ├── PrescriptionsForm.Designer.cs
-│   ├── PrescriptionsForm.cs
-│   ├── PrescriptionsForm.resx
-│   ├── UserForm.Designer.cs
-│   ├── UserForm.cs
-│   └── UserForm.resx
-├── Models                 → Classes modèles (entités)
-│   ├── Appartient.cs
-│   ├── Medicine.cs
-│   ├── Patient.cs
-│   ├── Prescription.cs
-│   └── User.cs
-|
-├── docker-compose.yml
-├── gsbMonolith.csproj
-├── gsbMonolith.csproj.user
-├── gsbMonolith.sln
-├── init.sql
-├── Program.cs              → Point d’entrée principal
-└── README.md               → Documentation du projet
-```
+### 1.2. Cahier des Charges Fonctionnel
+
+L'application **GSB Monolith** a été conçue pour répondre aux exigences suivantes :
+- **Centralisation** : Fournir un point d'accès unique pour la gestion des données métiers.
+- **Sécurité** : Garantir la confidentialité et l'intégrité des données par un système d'authentification et de gestion des droits.
+- **Traçabilité** : Journaliser les opérations critiques pour un audit ultérieur.
+- **Ergonomie** : Proposer une interface utilisateur intuitive et adaptée aux différents corps de métier (médecins, pharmaciens, administrateurs).
+- **Maintenabilité** : Adopter une architecture logicielle claire et documentée pour faciliter les évolutions futures.
 
 ---
 
-## 💾 Installation
+## 2. PÉRIMÈTRE FONCTIONNEL ET USER STORIES
 
-### 1️⃣ Prérequis
+### 2.1. Module d'Authentification et Gestion des Utilisateurs
 
-* **Visual Studio 2022+**
-* **.NET Framework 6.0 ou supérieur**
-* **Docker** (pour MySQL + phpMyAdmin)
-* *(Optionnel)* **MySQL Workbench** ou **phpMyAdmin**
+- **User Story 1 (Connexion)** : En tant qu'utilisateur (médecin, pharmacien, admin), je veux me connecter à l'application avec mon email et un mot de passe pour accéder à mes fonctionnalités dédiées.
+- **User Story 2 (Droits d'Accès)** : En tant qu'utilisateur, je ne veux voir que les menus et les options correspondant à mon rôle pour éviter les erreurs et protéger les données.
+- **User Story 3 (Gestion des Comptes)** : En tant qu'administrateur, je veux pouvoir créer, modifier, et désactiver des comptes utilisateurs pour gérer les effectifs.
 
----
+### 2.2. Module de Gestion des Patients
 
-## 🐳 Déploiement rapide avec Docker (recommandé)
+- **User Story 4 (Création Patient)** : En tant que médecin, je veux pouvoir créer une nouvelle fiche patient avec ses informations personnelles (nom, prénom, âge, genre).
+- **User Story 5 (Consultation Patients)** : En tant que médecin, je veux pouvoir consulter la liste de tous mes patients et filtrer la liste par nom pour retrouver rapidement un dossier.
+- **User Story 6 (Mise à Jour Patient)** : En tant que médecin, je veux pouvoir modifier les informations d'un patient existant.
 
-Tu peux lancer **MySQL** et **phpMyAdmin** sans rien installer manuellement grâce au fichier `docker-compose.yml` fourni.
+### 2.3. Module de Gestion des Médicaments
 
-### 🚀 Lancer la base de données
+- **User Story 7 (Catalogue Médicaments)** : En tant que pharmacien, je veux pouvoir consulter la liste de tous les médicaments disponibles dans le système.
+- **User Story 8 (Ajout Médicament)** : En tant que pharmacien, je veux pouvoir ajouter un nouveau médicament au catalogue en spécifiant son nom, sa description, son dosage et la molécule principale.
+- **User Story 9 (Modification Médicament)** : En tant que pharmacien, je veux pouvoir mettre à jour les informations d'un médicament ou le retirer de la vente.
 
-Dans le dossier racine du projet :
+### 2.4. Module de Gestion des Prescriptions
 
-```bash
-docker compose up -d
-```
-
-Cela va :
-
-* démarrer un conteneur MySQL (`gsb_mysql_db`)
-* démarrer phpMyAdmin sur le port **8080**
-* créer automatiquement la base et exécuter le fichier `init.sql` (s’il existe)
-* autoriser la connexion root **sans mot de passe**
-
-### 🔍 Accéder à phpMyAdmin
-
-Une fois les conteneurs lancés :
-👉 [http://localhost:8080](http://localhost:8080)
-
-Connecte-toi avec :
-
-```
-Utilisateur : root
-Mot de passe : (laisser vide)
-```
-
-### 🧠 Informations de connexion MySQL
-
-| Élément                      | Valeur       |
-| ---------------------------- | ------------ |
-| Hôte (depuis C# dans Docker) | `db`         |
-| Hôte (depuis ta machine)     | `127.0.0.1`  |
-| Port                         | `3306`       |
-| Utilisateur                  | `root`       |
-| Mot de passe                 | *(vide)*     |
-| Base de données par défaut   | `gsbMonolith` |
-
-> ⚠️ Si ton application C# tourne **dans le même `docker-compose.yml`**, utilise
-> `server=db;database=gsbMonolith;user=root;password=;`
->
-> Si elle tourne **en local sur ta machine**, utilise
-> `server=127.0.0.1;port=3306;database=gsbMonolith;user=root;password=;`.
-
-### 🧹 Réinitialiser la base de données
-
-Si tu veux tout nettoyer et repartir à zéro :
-
-```bash
-docker compose down -v
-docker compose up -d
-```
-
-> Cela supprime le volume MySQL et recharge `init.sql` automatiquement.
+- **User Story 10 (Création Prescription)** : En tant que médecin, je veux pouvoir créer une nouvelle prescription pour un patient donné, en y ajoutant un ou plusieurs médicaments avec une quantité spécifique.
+- **User Story 11 (Validation Atomique)** : Le système doit garantir que la création d'une prescription et l'ajout des médicaments associés sont une opération atomique (tout ou rien) pour éviter les prescriptions incomplètes.
+- **User Story 12 (Consultation Prescription)** : En tant que médecin, je veux pouvoir consulter l'historique des prescriptions d'un patient.
+- **User Story 13 (Export PDF)** : En tant que médecin, je veux pouvoir exporter une prescription au format PDF pour l'imprimer ou l'envoyer.
 
 ---
 
-## ⚙️ Installation manuelle (optionnelle)
+## 3. ARCHITECTURE LOGICIELLE DÉTAILLÉE
 
-Si tu préfères installer MySQL à la main :
+L'application est construite sur une architecture en couches (N-Tier) afin de découpler la logique de présentation, la logique métier et l'accès aux données.
 
-1. Crée une base :
+```
++-------------------------------------------------+
+|                couche PRÉSENTATION               |
+|  (Namespace: gsbMonolith.Forms)                 |
+|  WinForms, Contrôles UI, Gestion des événements |
++-------------------------------------------------+
+                        |
++-------------------------------------------------+
+|                  couche MÉTIER                  |
+|  (Namespace: gsbMonolith.Models)                |
+|  Classes: User, Patient, Medicine, etc.         |
++-------------------------------------------------+
+                        |
++-------------------------------------------------+
+|            couche D'ACCÈS AUX DONNÉES           |
+|  (Namespace: gsbMonolith.DAO)                   |
+|  Classes DAO: UserDAO, PatientDAO, etc.         |
++-------------------------------------------------+
+```
 
-   ```sql
-   CREATE DATABASE gsbMonolith;
+### 3.1. Couche d'Accès aux Données (DAO)
+
+- **Rôle** : Isoler le reste de l'application des détails d'implémentation de la base de données. Toute requête SQL est confinée à cette couche.
+- **`Database.cs`** : Classe centrale qui agit comme une fabrique de connexions (`MySqlConnection`). Elle lit la configuration et fournit des objets de connexion prêts à l'emploi aux classes DAO, évitant la duplication de code de connexion.
+- **`UserDAO.cs`** : Gère toutes les opérations CRUD pour l'entité `User`, y compris la vérification du mot de passe lors de l'authentification.
+- **`PatientDAO.cs`**, **`MedicineDAO.cs`** : Gèrent les opérations CRUD pour leurs entités respectives.
+- **`PrescriptionDAO.cs`** : Contient la logique la plus complexe, notamment la méthode `CreatePrescriptionWithMedicines` qui utilise une `MySqlTransaction` pour garantir l'atomicité.
+
+### 3.2. Couche Métier (Models)
+
+- **Rôle** : Représenter les entités du domaine de l'application sous forme d'objets C#. Ces classes sont des "POCO" (Plain Old C# Object) sans logique complexe.
+- **`User.cs`** : Propriétés `Id`, `FirstName`, `LastName`, `Email`, `Role`, etc.
+- **`Patient.cs`** : Propriétés `Id`, `Name`, `FirstName`, `Age`, et une référence au `User` qui est son médecin.
+- Ces objets sont utilisés pour transférer les données entre la couche de présentation et la couche d'accès aux données.
+
+### 3.3. Couche de Présentation (Forms)
+
+- **Rôle** : Gérer l'interface utilisateur et l'interaction avec l'utilisateur.
+- **`MainForm.cs`** : Formulaire principal qui sert de conteneur MDI (Multiple Document Interface) ou de point de départ pour ouvrir les autres formulaires.
+- **`LoginForm.cs`** : Premier formulaire affiché, gère la saisie des identifiants.
+- **`PatientsForm.cs`**, **`MedicinesForm.cs`**, etc. : Formulaires dédiés à la gestion d'une entité spécifique. Ils contiennent des contrôles comme des `DataGridView` pour lister les données et des `TextBox` pour l'édition. La logique de ces formulaires se limite à la validation des entrées et à l'appel des méthodes DAO appropriées.
+
+---
+
+## 4. MODÈLE PHYSIQUE DES DONNÉES (MYSQL)
+
+### 4.1. Schéma Détaillé
+
+| Table          | Colonne             | Type          | Contraintes / Notes                                |
+|----------------|---------------------|---------------|----------------------------------------------------|
+| **User**       | `id_user`           | `INT`         | `PRIMARY KEY`, `AUTO_INCREMENT`                    |
+|                | `firstname`         | `VARCHAR(50)` |                                                    |
+|                | `lastname`          | `VARCHAR(50)` |                                                    |
+|                | `email`             | `VARCHAR(100)`| `UNIQUE`                                           |
+|                | `password_hash`     | `VARCHAR(256)`| Stocke le hash SHA256 du mot de passe              |
+|                | `role`              | `VARCHAR(20)` | Ex: 'Médecin', 'Pharmacien', 'Admin'               |
+|                |                     |               |                                                    |
+| **Patient**    | `id_patient`        | `INT`         | `PRIMARY KEY`, `AUTO_INCREMENT`                    |
+|                | `id_user`           | `INT`         | `FOREIGN KEY` vers `User(id_user)` (Médecin réf.)  |
+|                | `name`              | `VARCHAR(50)` |                                                    |
+|                | `firstname`         | `VARCHAR(50)` |                                                    |
+|                | `age`               | `INT`         |                                                    |
+|                | `gender`            | `VARCHAR(10)` | Ex: 'Homme', 'Femme'                               |
+|                |                     |               |                                                    |
+| **Medicine**   | `id_medicine`       | `INT`         | `PRIMARY KEY`, `AUTO_INCREMENT`                    |
+|                | `id_user`           | `INT`         | `FOREIGN KEY` vers `User(id_user)` (Pharmacien réf.)|
+|                | `name`              | `VARCHAR(100)`|                                                    |
+|                | `description`       | `TEXT`        |                                                    |
+|                | `dosage`            | `VARCHAR(50)` |                                                    |
+|                | `molecule`          | `VARCHAR(100)`|                                                    |
+|                |                     |               |                                                    |
+| **Prescription** | `id_prescription`   | `INT`         | `PRIMARY KEY`, `AUTO_INCREMENT`                    |
+|                | `id_user`           | `INT`         | `FOREIGN KEY` vers `User(id_user)` (Médecin)       |
+|                | `id_patient`        | `INT`         | `FOREIGN KEY` vers `Patient(id_patient)`           |
+|                | `validity`          | `DATE`        | Date de fin de validité de l'ordonnance            |
+|                |                     |               |                                                    |
+| **Appartient** | `id_prescription`   | `INT`         | `PRIMARY KEY`, `FOREIGN KEY` vers `Prescription`   |
+|                | `id_medicine`       | `INT`         | `PRIMARY KEY`, `FOREIGN KEY` vers `Medicine`       |
+|                | `quantity`          | `INT`         | Quantité du médicament prescrit                    |
+
+### 4.2. Script d'Initialisation (`docker/init.sql`)
+
+Le script SQL complet est exécuté automatiquement par Docker au premier lancement. Il crée la base de données, les tables, et insère un jeu de données de test.
+
+<details>
+  <summary>Cliquer pour voir le contenu de init.sql</summary>
+
+```sql
+-- Exemple de contenu possible pour init.sql
+CREATE DATABASE IF NOT EXISTS gsbMonolith;
+USE gsbMonolith;
+
+-- (Contenu complet des CREATE TABLE et INSERT INTO...)
+-- ...
+```
+</details>
+
+---
+
+## 5. GUIDE D'INSTALLATION VERBEUX
+
+### 5.1. Prérequis Logiciels
+- **Visual Studio 2022** : Assurez-vous d'avoir installé le workload **"Développement desktop .NET"**.
+- **Docker Desktop** : Doit être en cours d'exécution sur votre machine.
+
+### 5.2. Procédure de Lancement
+1.  **Clonage du Dépôt** :
+    ```bash
+    git clone <URL_DU_DEPOT>
+    cd gsbMonolith
+    ```
+2.  **Démarrage de l'Environnement Docker** :
+    Cette étape est cruciale. Ouvrez un terminal (PowerShell, CMD, etc.) à la racine du projet.
+    ```bash
+    docker-compose up -d
+    ```
+    Le flag `-d` (detached) lance les conteneurs en arrière-plan.
+
+3.  **Vérification des Conteneurs** :
+    Vous pouvez vérifier que les conteneurs tournent correctement :
+    ```bash
+    docker ps
+    ```
+    Vous devriez voir deux conteneurs : `gsb_mysql_db` et `gsb_phpmyadmin`.
+
+4.  **Vérification de la Base de Données (Optionnel mais recommandé)** :
+    - Ouvrez votre navigateur et allez sur `http://localhost:8080`.
+    - Connectez-vous à phpMyAdmin :
+        - **Serveur** : `db` (laisser tel quel)
+        - **Utilisateur** : `root`
+        - **Mot de passe** : (laisser vide)
+    - Une fois connecté, vous devriez voir la base de données `gsbMonolith` dans le menu de gauche, avec toutes ses tables.
+
+5.  **Lancement de l'Application .NET** :
+    - Ouvrez `gsbMonolith.sln` dans Visual Studio 2022.
+    - Le projet devrait se charger. Attendez que Visual Studio finisse de restaurer les dépendances NuGet.
+    - Assurez-vous que le profil de build en haut est bien `Debug`.
+    - Appuyez sur `F5` pour lancer le débogage. Le formulaire de connexion doit apparaître.
+
+### 5.3. Dépannage (Troubleshooting)
+- **Erreur `Cannot connect to any of the specified MySQL hosts`** :
+    - Vérifiez que vos conteneurs Docker sont bien démarrés (`docker ps`).
+    - Assurez-vous que le port `3306` n'est pas déjà utilisé par une autre instance de MySQL sur votre machine.
+- **Erreur Docker `port is already allocated`** :
+    - Un autre service utilise le port `3306` ou `8080`. Arrêtez ce service ou modifiez les ports dans le fichier `docker-compose.yml`.
+- **L'application se lance mais les données n'apparaissent pas** :
+    - Vérifiez dans phpMyAdmin que le script `init.sql` a bien inséré les données de test. Si les tables sont vides, vous pouvez forcer la réinitialisation de la base de données avec `docker-compose down -v` puis `docker-compose up -d`.
+
+---
+
+## 6. STRATÉGIES DE SÉCURITÉ ET DE QUALITÉ
+
+### 6.1. Mesures de Sécurité
+- **Hachage des mots de passe** : L'algorithme SHA256 est utilisé. Un "sel" (salt) n'est pas implémenté dans cette version mais constitue une piste d'amélioration cruciale.
+- **Prévention des Injections SQL** : Toutes les requêtes SQL sont construites avec des paramètres (`MySqlParameter`), jamais par concaténation de chaînes.
+- **Gestion des Erreurs** : Les blocs `try-catch` sont utilisés pour intercepter les exceptions SQL et éviter de divulguer des informations techniques à l'utilisateur final.
+
+### 6.2. Stratégie de Tests
+- **Tests Unitaires (DAO)** : L'architecture se prête à l'écriture de tests unitaires pour la couche DAO. Il serait pertinent d'utiliser un framework comme MSTest ou NUnit pour créer des tests qui valident chaque méthode DAO (ex: `Test_CreateUser_Returns_NewId`). Cela nécessiterait une base de données de test dédiée.
+- **Tests d'Intégration** : Scénarios de tests qui valident un workflow complet (ex: connexion, création d'un patient, ajout d'une prescription).
+- **Tests Manuels (UI)** : Une série de cas de tests manuels doit être suivie pour valider l'ergonomie et le comportement visuel de chaque formulaire.
+
+---
+
+## 7. GESTION DES DÉPENDANCES ET DOCUMENTATION
+
+### 7.1. Dépendances NuGet
+- **`MySql.Data`** : Connecteur officiel de MySQL pour .NET, indispensable pour communiquer avec la base de données.
+- **Autres dépendances** : Le projet repose principalement sur les librairies standards du .NET Framework 6.
+
+### 7.2. Génération de la Documentation Technique
+Le projet inclut une configuration pour **DocFX**, un générateur de documentation pour .NET.
+Pour générer la documentation :
+1. Installez DocFX en suivant les instructions officielles.
+2. Exécutez la commande suivante à la racine du projet :
+   ```bash
+   docfx docfx/docfx.json --serve
    ```
-2. Importe le fichier SQL fourni (`init.sql`).
-3. Modifie la chaîne de connexion dans `Database.cs` :
-
-   ```csharp
-   private string connectionString = "server=localhost;user=root;password=;database=gsbMonolith;";
-   ```
+3. La documentation sera générée dans le dossier `_site` et accessible sur `http://localhost:8081`.
 
 ---
 
-## 🧠 DAO disponibles
+## 8. ÉVOLUTIONS ET PISTES D'AMÉLIORATION
 
-| Classe              | Description                           | Méthodes clés                                                                        |
-| ------------------- | ------------------------------------- | ------------------------------------------------------------------------------------ |
-| **UserDAO**         | Gestion des utilisateurs              | `GetUserByEmail()`, `AuthenticateUser()`                                             |
-| **PatientDAO**      | Gestion des patients                  | `GetPatientById()`, `CreatePatient()`, `GetAllPatients()`                            |
-| **MedicineDAO**     | Gestion des médicaments               | `GetMedicineById()`, `GetAllMedicines()`                                             |
-| **PrescriptionDAO** | Gestion des prescriptions et liaisons | `GetPrescriptionById()`, `CreatePrescription()`, `CreatePrescriptionWithMedicines()` |
-
----
-
-## 💡 Exemple d’utilisation
-
-```csharp
-PrescriptionDAO dao = new PrescriptionDAO();
-Prescription p = new Prescription(0, 1, 5, 2, "2025-12-01");
-List<int> meds = new List<int> { 1, 3, 5 };
-
-bool ok = dao.CreatePrescriptionWithMedicines(p, meds);
-if (ok)
-    MessageBox.Show("Prescription créée avec succès !");
-else
-    MessageBox.Show("Erreur lors de la création.");
-```
+- **Passage au Web** : Migrer l'application vers une technologie web comme ASP.NET Core MVC / Blazor.
+- **API REST** : Exposer la logique métier via une API REST pour permettre la consommation par d'autres clients (application mobile, etc.).
+- **Améliorer la Sécurité** : Ajouter un "sel" au hachage des mots de passe.
+- **Déploiement Continu** : Mettre en place une pipeline CI/CD (avec GitHub Actions, par exemple) pour automatiser les builds, les tests et les déploiements en mode `Release`.
+- **Reporting** : Développer un module de reporting plus avancé (statistiques sur les prescriptions, etc.).
 
 ---
 
-## 🔐 Sécurité
+## 9. AUTEURS
 
-* Les mots de passe utilisateurs sont **hachés en SHA256**
-* Les interactions SQL utilisent des **requêtes paramétrées**
-* Gestion des transactions pour les opérations critiques (`PrescriptionDAO`)
-
----
-
-## 🧑‍💻 Auteurs
-
-* **[Morgan Bourré]**
-* Projet réalisé dans le cadre de **GSB - BTS SIO**
-* Année : **2025**
+- **Morgan Bourré**
+- Projet réalisé dans le cadre du **BTS SIO — GSB**
+- Année : **2025**
 
 ---
 
-## 🧾 Licence
+## 10. LICENCE
 
-Ce projet est distribué sous licence **MIT**.
-Vous êtes libre de le réutiliser, modifier et distribuer à condition de conserver la mention d’auteur.
+Ce projet est distribué sous la **licence MIT**.
