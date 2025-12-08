@@ -1,10 +1,11 @@
-﻿name: Build & Upload gsbMonolith
+name: Build & Upload gsbMonolith
 on:
   push:
     tags:
       - "v*"
 permissions:
   contents: write
+
 jobs:
   build_upload:
     runs-on: windows-latest
@@ -54,9 +55,15 @@ jobs:
         run: |
           ren publish\gsbMonolith.exe gsbMonolith-${{ github.ref_name }}.exe
       
-      - name: Upload exe to existing GitHub release
+      - name: Zip the exe
+        run: |
+          Compress-Archive `
+            -Path "publish\gsbMonolith-${{ github.ref_name }}.exe" `
+            -DestinationPath "publish\gsbMonolith-${{ github.ref_name }}.zip"
+      
+      - name: Upload zip to existing GitHub release
         shell: bash
         run: |
-          gh release upload "${{ github.ref_name }}" "publish/gsbMonolith-${{ github.ref_name }}.exe" --clobber
+          gh release upload "${{ github.ref_name }}" "publish/gsbMonolith-${{ github.ref_name }}.zip" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
