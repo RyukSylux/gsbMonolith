@@ -16,7 +16,7 @@ namespace gsbMonolith.Models
         /// <summary>
         /// Gets or sets the identifier of the user associated with the creation or management of the medicine.
         /// </summary>
-        public int Id_user { get; set; }
+        public int? Id_user { get; set; }
 
         /// <summary>
         /// Gets or sets the recommended dosage of the medicine.
