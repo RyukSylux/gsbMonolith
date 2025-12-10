@@ -38,7 +38,7 @@ namespace gsbMonolith.DAO
                             u.firstname AS user_firstname,
                             u.name AS user_name
                         FROM Medicine m
-                        INNER JOIN Users u ON m.id_user = u.id_user;
+                        LEFT JOIN Users u ON m.id_user = u.id_user;
                     ";
 
                     using var cmd = new MySqlCommand(query, connection);
@@ -49,12 +49,12 @@ namespace gsbMonolith.DAO
                         medicines.Add(new
                         {
                             Id_medicine = reader.GetInt32("id_medicine"),
-                            Id_user = reader.GetInt32("id_user"),
+                            Id_user = reader["id_user"] == DBNull.Value ? 0 : Convert.ToInt32(reader["id_user"]),
                             Dosage = reader["dosage"].ToString(),
                             Name = reader["medicine_name"].ToString(),
                             Description = reader["description"].ToString(),
                             Molecule = reader["molecule"].ToString(),
-                            User = $"{reader["user_firstname"]} {reader["user_name"]}" // Resolves the user
+                            User = reader["user_firstname"] == DBNull.Value ? "Aucun utilisateur" : $"{reader["user_firstname"]} {reader["user_name"]}"
                         });
                     }
                 }

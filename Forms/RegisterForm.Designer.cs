@@ -1,6 +1,7 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows.Forms;
 
+#if DEBUG
 namespace gsbMonolith.Forms
 {
     partial class RegisterForm
@@ -230,3 +231,4 @@ namespace gsbMonolith.Forms
         private Button btnBackToLogin;
     }
 }
+#endif
