@@ -286,7 +286,7 @@ ALTER TABLE `Appartient`
 -- Contraintes pour la table `Medicine`
 --
 ALTER TABLE `Medicine`
-  ADD CONSTRAINT `Medicine_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `Users` (`id_user`) ON DELETE CASCADE;
+  ADD CONSTRAINT `Medicine_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `Users` (`id_user`) ON DELETE SET NULL;
 
 --
 -- Contraintes pour la table `Patients`

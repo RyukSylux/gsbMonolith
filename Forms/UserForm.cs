@@ -1,5 +1,5 @@
-﻿using gsbMonolith.DAO;
 using gsbMonolith.Models;
+using gsbMonolith.Views;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -8,169 +8,136 @@ namespace gsbMonolith.Forms
 {
     public partial class UserForm : Form
     {
-        private readonly User connectedUser;
-        private int? selectedUserId = null;
+        private User currentUser;
+        
+        // Layout Controls
+        private Panel navbarPanel;
+        private Panel contentPanel;
+        private Button activeNavButton;
+
         public UserForm(User user)
         {
-            InitializeComponent();
-            connectedUser = user;
-            LoadUserData();
-            dvgUsersLoadContent();
+            InitializeComponent(); // Vide maintenant
+            currentUser = user;
+            SetupLayout();
+            
+            // Charge la vue par défaut
+            LoadView(new DashboardView(currentUser));
         }
-        private void LoadUserData()
+
+        private void SetupLayout()
         {
-            Firstname_label.Text = $"Bienvenue {connectedUser.FirstName} {connectedUser.Name} 👋";
-
-            if (!connectedUser.Role)
-                Role_label.Text = "Rôle : Médecin / Prescripteur";
-            else
-                Role_label.Text = "Rôle : Administrateur";
-
-            btnDeleteUser.Visible = connectedUser.Role;
-            Email_label.Text = $"Email : {connectedUser.Email}";
-        }
-        private void dvgUsersLoadContent()
-        {
-            if (connectedUser.Role)
+            // --- Window Settings ---
+            this.Size = new Size(1280, 800);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.MinimumSize = new Size(1024, 768);
+            this.Text = "GSB - Gestion Médicale";
+            
+            // --- Navbar (Left) ---
+            navbarPanel = new Panel
             {
-                var Users = new UserDAO();
-                dgvUsers.Visible = true;
-                dgvUsers.AutoGenerateColumns = true;
-                dgvUsers.DataSource = Users.GetAllUsers();
+                Dock = DockStyle.Left,
+                Width = 260,
+                BackColor = Color.FromArgb(33, 43, 54) // Dark Sidebar
+            };
 
-                if (dgvUsers.Columns["Id"] != null)
-                    dgvUsers.Columns["Id"].Visible = false;
+            // Logo Area
+            var logoPanel = new Panel { Dock = DockStyle.Top, Height = 100, BackColor = Color.FromArgb(28, 37, 46) };
+            var lblLogo = new Label 
+            { 
+                Text = "GSB Medical", 
+                ForeColor = Color.White, 
+                Font = new Font("Segoe UI", 18F, FontStyle.Bold),
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Fill
+            };
+            logoPanel.Controls.Add(lblLogo);
+            navbarPanel.Controls.Add(logoPanel);
 
-                if (dgvUsers.Columns["Password"] != null)
-                    dgvUsers.Columns["Password"].Visible = false;
+            // Nav Buttons
+            AddNavButton("🏠 Accueil", 100, () => new DashboardView(currentUser));
+            AddNavButton("💊 Médicaments", 160, () => new MedicinesView(currentUser));
+            AddNavButton("🙍‍♂️ Patients", 220, () => new PatientsView(currentUser));
+            AddNavButton("📄 Prescriptions", 280, () => new PrescriptionsView(currentUser));
 
-                dgvUsers.Columns["Name"].HeaderText = "Nom";
-                dgvUsers.Columns["FirstName"].HeaderText = "Prénom";
-                dgvUsers.Columns["Email"].HeaderText = "E-mail";
-                dgvUsers.Columns["Role"].HeaderText = "Administrateur ?";
-            }
-        }
-        private void DgvUsers_SelectionChanged(object sender, EventArgs e)
-        {
-            if (dgvUsers.SelectedRows.Count > 0)
+            // Logout Button (Bottom)
+            var btnLogout = new Button
             {
-                var row = dgvUsers.SelectedRows[0];
-                selectedUserId = Convert.ToInt32(row.Cells["Id"].Value);
-                txtNom.Text = row.Cells["Name"].Value.ToString();
-                txtPrenom.Text = row.Cells["FirstName"].Value.ToString();
-                txtEmail.Text = row.Cells["Email"].Value.ToString();
-                chkRole.Checked = Convert.ToBoolean(row.Cells["Role"].Value);
-                txtPassword.Text = "";
-            }
-        }
-        private void BtnNewUser_Click(object sender, EventArgs e)
-        {
-            selectedUserId = null;
-            txtNom.Text = "";
-            txtPrenom.Text = "";
-            txtEmail.Text = "";
-            txtPassword.Text = "";
-            chkRole.Checked = false;
-            dgvUsers.ClearSelection();
-        }
-        private void BtnSaveUser_Click(object sender, EventArgs e)
-        {
-            var dao = new UserDAO();
-
-            string email = txtEmail.Text.Trim();
-            string name = txtNom.Text.Trim();
-            string firstname = txtPrenom.Text.Trim();
-            string password = txtPassword.Text.Trim();
-            bool role = chkRole.Checked;
-
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(firstname))
-            {
-                MessageBox.Show("Veuillez remplir tous les champs requis (nom, prénom, email).", "Champs manquants", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            bool success;
-            if (selectedUserId == null)
-            {
-                if (string.IsNullOrWhiteSpace(password))
-                {
-                    MessageBox.Show("Le mot de passe est requis pour créer un utilisateur.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                success = dao.CreateUser(email, password, name, firstname, role);
-            }
-            else
-            {
-                var updatedUser = new User((int)selectedUserId, name, firstname, role, email);
-                success = dao.UpdateUser(updatedUser);
-            }
-
-            if (success)
-            {
-                MessageBox.Show("✅ Enregistrement effectué avec succès.", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                dvgUsersLoadContent();
-                BtnNewUser_Click(null, null);
-            }
-        }
-        private void BtnDeleteUser_Click(object sender, EventArgs e)
-        {
-            if (selectedUserId == null)
-            {
-                MessageBox.Show("Veuillez sélectionner un utilisateur à supprimer.", "Aucun utilisateur sélectionné", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var result = MessageBox.Show("Voulez-vous vraiment supprimer cet utilisateur ?", "Confirmation de suppression", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (result == DialogResult.Yes)
-            {
-                var dao = new UserDAO();
-                bool success = dao.DeleteUser((int)selectedUserId);
-
-                if (success)
-                {
-                    MessageBox.Show("✅ Utilisateur supprimé avec succès.", "Suppression réussie", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    dvgUsersLoadContent();
-                    BtnNewUser_Click(null, null);
-                }
-            }
-        }
-        private void Logout_button_Click(object sender, EventArgs e)
-        {
-            DialogResult result = MessageBox.Show("Voulez-vous vous déconnecter ?", "Déconnexion", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (result == DialogResult.Yes)
-            {
-#if DEBUG
+                Text = "Déconnexion",
+                Dock = DockStyle.Bottom,
+                Height = 60,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(198, 40, 40),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 12F)
+            };
+            btnLogout.FlatAppearance.BorderSize = 0;
+            btnLogout.Click += (s, e) => {
                 this.Hide();
-#else
-                this.Close();
-#endif
-                MainForm loginForm = new MainForm();
-                loginForm.Show();
-            }
-        }
-        private void BtnPatients_Click(object sender, EventArgs e)
-        {
-            PatientsForm f = new PatientsForm(connectedUser);
-            f.Show();
-        }
-        private void BtnPrescriptions_Click(object sender, EventArgs e)
-        {
-            PrescriptionsForm f = new PrescriptionsForm(connectedUser);
-            f.Show();
-        }
-        private void BtnMedicines_Click(object sender, EventArgs e)
-        {
-            MedicinesForm f = new MedicinesForm(connectedUser);
-            f.Show();
-        }
-        private void DgvUsers_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
-        {
-            int totalHeight = dgvUsers.ColumnHeadersHeight;
-            foreach (DataGridViewRow row in dgvUsers.Rows)
+                new MainForm().Show(); // Retour au login
+            };
+            navbarPanel.Controls.Add(btnLogout);
+
+            // --- Content Panel (Right/Fill) ---
+            contentPanel = new Panel
             {
-                totalHeight += row.Height;
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(245, 247, 250)
+            };
+
+            // Add to Form
+            this.Controls.Add(contentPanel);
+            this.Controls.Add(navbarPanel);
+        }
+
+        private void AddNavButton(string text, int top, Func<UserControl> viewFactory)
+        {
+            var btn = new Button
+            {
+                Text = "  " + text, // Petit espace
+                Top = top,
+                Left = 0,
+                Width = 260,
+                Height = 60,
+                FlatStyle = FlatStyle.Flat,
+                FlatAppearance = { BorderSize = 0 },
+                BackColor = Color.Transparent,
+                ForeColor = Color.FromArgb(180, 180, 180),
+                Font = new Font("Segoe UI", 11F),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(20, 0, 0, 0),
+                Cursor = Cursors.Hand,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            btn.Click += (s, e) => {
+                SetActiveButton(btn);
+                LoadView(viewFactory());
+            };
+
+            navbarPanel.Controls.Add(btn);
+        }
+
+        private void SetActiveButton(Button btn)
+        {
+            if (activeNavButton != null)
+            {
+                activeNavButton.BackColor = Color.Transparent;
+                activeNavButton.ForeColor = Color.FromArgb(180, 180, 180);
             }
-            dgvUsers.Height = totalHeight + 2;
+            activeNavButton = btn;
+            activeNavButton.BackColor = Color.FromArgb(45, 55, 72); // Active state color
+            activeNavButton.ForeColor = Color.White;
+            
+            // Petite barre bleue à gauche pour indiquer l'actif (Optionnel, simulé par border ou panel)
+        }
+
+        private void LoadView(UserControl view)
+        {
+            contentPanel.Controls.Clear();
+            view.Dock = DockStyle.Fill;
+            contentPanel.Controls.Add(view);
         }
     }
 }
