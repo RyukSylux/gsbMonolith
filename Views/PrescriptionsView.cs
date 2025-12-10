@@ -33,6 +33,11 @@ namespace gsbMonolith.Views
         private DataGridView dgvSelectedMeds;
         private int? editingPrescriptionId = null;
 
+        // Dragging Logic
+        private bool isDragging = false;
+        private Point dragCursorPoint;
+        private Point dragFormPoint;
+
         // Temporary storage for meds in edit mode
         private List<MedicineSelection> currentMeds = new List<MedicineSelection>();
 
@@ -158,8 +163,32 @@ namespace gsbMonolith.Views
                 Visible = false,
                 BorderStyle = BorderStyle.FixedSingle 
             };
-            
-            Label lblEditTitle = new Label { Text = "Détails Prescription", Font = new Font("Segoe UI", 14F, FontStyle.Bold), Location = new Point(20, 20), AutoSize = true };
+
+            // Header for dragging and closing
+            Panel editHeader = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Color.FromArgb(240, 240, 240) };
+            editHeader.MouseDown += (s, e) => { isDragging = true; dragCursorPoint = Cursor.Position; dragFormPoint = editPanel.Location; };
+            editHeader.MouseMove += (s, e) => { if (isDragging) { Point dif = Point.Subtract(Cursor.Position, new Size(dragCursorPoint)); editPanel.Location = Point.Add(dragFormPoint, new Size(dif)); } };
+            editHeader.MouseUp += (s, e) => { isDragging = false; };
+
+            Label lblEditTitle = new Label { Text = "Détails Prescription", Font = new Font("Segoe UI", 14F, FontStyle.Bold), Location = new Point(15, 12), AutoSize = true };
+            editHeader.Controls.Add(lblEditTitle);
+
+            Button btnCloseX = new Button 
+            { 
+                Text = "✕", 
+                Dock = DockStyle.Right, 
+                Width = 50, 
+                FlatStyle = FlatStyle.Flat, 
+                FlatAppearance = { BorderSize = 0 },
+                BackColor = Color.Transparent,
+                ForeColor = Color.Gray,
+                Font = new Font("Segoe UI", 12F, FontStyle.Regular),
+                Cursor = Cursors.Hand
+            };
+            btnCloseX.Click += (s, e) => editPanel.Visible = false;
+            editHeader.Controls.Add(btnCloseX);
+
+            editPanel.Controls.Add(editHeader);
             
             // Patient & Date
             Label lblPatient = new Label { Text = "Patient", Location = new Point(20, 60), AutoSize = true, ForeColor = Color.Gray };
@@ -208,7 +237,7 @@ namespace gsbMonolith.Views
             btnCancel = new Button { Text = "Annuler", BackColor = Color.Gray, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(190, 520), Size = new Size(150, 40) };
             btnCancel.Click += (s, e) => editPanel.Visible = false;
 
-            editPanel.Controls.AddRange(new Control[] { lblEditTitle, lblPatient, cmbPatients, lblDate, dtpValidity, grpMeds, dgvSelectedMeds, btnSave, btnCancel });
+            editPanel.Controls.AddRange(new Control[] { lblPatient, cmbPatients, lblDate, dtpValidity, grpMeds, dgvSelectedMeds, btnSave, btnCancel });
 
             // Assembly
             this.Controls.Add(editPanel);
@@ -242,7 +271,7 @@ namespace gsbMonolith.Views
             cmbPatients.ValueMember = "Id_patient";
             
             // Medicines
-            cmbMedicines.DataSource = medicineDAO.GetAll(); // Assumes returns List<Medicine>
+            cmbMedicines.DataSource = medicineDAO.GetAllMedicines();
             cmbMedicines.DisplayMember = "Name";
             cmbMedicines.ValueMember = "Id_medicine";
         }

@@ -22,6 +22,11 @@ namespace gsbMonolith.Views
         private Button btnSave, btnCancel;
         private int? editingId = null;
 
+        // Dragging Logic
+        private bool isDragging = false;
+        private Point dragCursorPoint;
+        private Point dragFormPoint;
+
         public MedicinesView(User user)
         {
             currentUser = user;
@@ -119,8 +124,32 @@ namespace gsbMonolith.Views
                 Visible = false,
                 BorderStyle = BorderStyle.FixedSingle
             };
-            
-            Label lblEditTitle = new Label { Text = "Détails Médicament", Font = new Font("Segoe UI", 14F, FontStyle.Bold), Location = new Point(20, 20), AutoSize = true };
+
+            // Header for dragging and closing
+            Panel editHeader = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Color.FromArgb(240, 240, 240) };
+            editHeader.MouseDown += (s, e) => { isDragging = true; dragCursorPoint = Cursor.Position; dragFormPoint = editPanel.Location; };
+            editHeader.MouseMove += (s, e) => { if (isDragging) { Point dif = Point.Subtract(Cursor.Position, new Size(dragCursorPoint)); editPanel.Location = Point.Add(dragFormPoint, new Size(dif)); } };
+            editHeader.MouseUp += (s, e) => { isDragging = false; };
+
+            Label lblEditTitle = new Label { Text = "Détails Médicament", Font = new Font("Segoe UI", 14F, FontStyle.Bold), Location = new Point(15, 12), AutoSize = true };
+            editHeader.Controls.Add(lblEditTitle);
+
+            Button btnCloseX = new Button 
+            { 
+                Text = "✕", 
+                Dock = DockStyle.Right, 
+                Width = 50, 
+                FlatStyle = FlatStyle.Flat, 
+                FlatAppearance = { BorderSize = 0 },
+                BackColor = Color.Transparent,
+                ForeColor = Color.Gray,
+                Font = new Font("Segoe UI", 12F, FontStyle.Regular),
+                Cursor = Cursors.Hand
+            };
+            btnCloseX.Click += (s, e) => editPanel.Visible = false;
+            editHeader.Controls.Add(btnCloseX);
+
+            editPanel.Controls.Add(editHeader);
             
             txtName = CreateInput("Nom du médicament", 80);
             txtMolecule = CreateInput("Molécule", 140);
@@ -137,7 +166,7 @@ namespace gsbMonolith.Views
             btnCancel.Width = 150;
             btnCancel.Click += (s, e) => editPanel.Visible = false;
 
-            editPanel.Controls.AddRange(new Control[] { lblEditTitle, txtName, txtMolecule, txtDosage, txtDescription, btnSave, btnCancel });
+            editPanel.Controls.AddRange(new Control[] { txtName, txtMolecule, txtDosage, txtDescription, btnSave, btnCancel });
 
             // --- Assembly ---
             this.Controls.Add(editPanel); 
