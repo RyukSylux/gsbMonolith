@@ -36,28 +36,28 @@ L'application **GSB Monolith** a été conçue pour répondre aux exigences suiv
 
 ### 2.1. Module d'Authentification et Gestion des Utilisateurs
 
-- **User Story 1 (Connexion)** : En tant qu'utilisateur (médecin, pharmacien, admin), je veux me connecter à l'application avec mon email et un mot de passe pour accéder à mes fonctionnalités dédiées.
-- **User Story 2 (Droits d'Accès)** : En tant qu'utilisateur, je ne veux voir que les menus et les options correspondant à mon rôle pour éviter les erreurs et protéger les données.
-- **User Story 3 (Gestion des Comptes)** : En tant qu'administrateur, je veux pouvoir créer, modifier, et désactiver des comptes utilisateurs pour gérer les effectifs.
+- **(Connexion)** : En tant qu'utilisateur (médecin, pharmacien, admin), je veux me connecter à l'application avec mon email et un mot de passe pour accéder à mes fonctionnalités dédiées.
+- **(Droits d'Accès)** : En tant qu'utilisateur, je ne veux voir que les menus et les options correspondant à mon rôle pour éviter les erreurs et protéger les données.
+- **(Gestion des Comptes)** : En tant qu'administrateur, je veux pouvoir créer, modifier, et désactiver des comptes utilisateurs pour gérer les effectifs.
 
 ### 2.2. Module de Gestion des Patients
 
-- **User Story 4 (Création Patient)** : En tant que médecin, je veux pouvoir créer une nouvelle fiche patient avec ses informations personnelles (nom, prénom, âge, genre).
-- **User Story 5 (Consultation Patients)** : En tant que médecin, je veux pouvoir consulter la liste de tous mes patients et filtrer la liste par nom pour retrouver rapidement un dossier.
-- **User Story 6 (Mise à Jour Patient)** : En tant que médecin, je veux pouvoir modifier les informations d'un patient existant.
+- **(Création Patient)** : En tant que médecin, je veux pouvoir créer une nouvelle fiche patient avec ses informations personnelles (nom, prénom, âge, genre).
+- **(Consultation Patients)** : En tant que médecin, je veux pouvoir consulter la liste de tous mes patients et filtrer la liste par nom pour retrouver rapidement un dossier.
+- **(Mise à Jour Patient)** : En tant que médecin, je veux pouvoir modifier les informations d'un patient existant.
 
 ### 2.3. Module de Gestion des Médicaments
 
-- **User Story 7 (Catalogue Médicaments)** : En tant que pharmacien, je veux pouvoir consulter la liste de tous les médicaments disponibles dans le système.
-- **User Story 8 (Ajout Médicament)** : En tant que pharmacien, je veux pouvoir ajouter un nouveau médicament au catalogue en spécifiant son nom, sa description, son dosage et la molécule principale.
-- **User Story 9 (Modification Médicament)** : En tant que pharmacien, je veux pouvoir mettre à jour les informations d'un médicament ou le retirer de la vente.
+- **(Catalogue Médicaments)** : En tant que pharmacien, je veux pouvoir consulter la liste de tous les médicaments disponibles dans le système.
+- **(Ajout Médicament)** : En tant que pharmacien, je veux pouvoir ajouter un nouveau médicament au catalogue en spécifiant son nom, sa description, son dosage et la molécule principale.
+- **(Modification Médicament)** : En tant que pharmacien, je veux pouvoir mettre à jour les informations d'un médicament ou le retirer de la vente.
 
 ### 2.4. Module de Gestion des Prescriptions
 
-- **User Story 10 (Création Prescription)** : En tant que médecin, je veux pouvoir créer une nouvelle prescription pour un patient donné, en y ajoutant un ou plusieurs médicaments avec une quantité spécifique.
-- **User Story 11 (Validation Atomique)** : Le système doit garantir que la création d'une prescription et l'ajout des médicaments associés sont une opération atomique (tout ou rien) pour éviter les prescriptions incomplètes.
-- **User Story 12 (Consultation Prescription)** : En tant que médecin, je veux pouvoir consulter l'historique des prescriptions d'un patient.
-- **User Story 13 (Export PDF)** : En tant que médecin, je veux pouvoir exporter une prescription au format PDF pour l'imprimer ou l'envoyer.
+- **(Création Prescription)** : En tant que médecin, je veux pouvoir créer une nouvelle prescription pour un patient donné, en y ajoutant un ou plusieurs médicaments avec une quantité spécifique.
+- **(Validation Atomique)** : Le système doit garantir que la création d'une prescription et l'ajout des médicaments associés sont une opération atomique (tout ou rien) pour éviter les prescriptions incomplètes.
+- **(Consultation Prescription)** : En tant que médecin, je veux pouvoir consulter l'historique des prescriptions d'un patient.
+- **(Export PDF)** : En tant que médecin, je veux pouvoir exporter une prescription au format PDF pour l'imprimer ou l'envoyer.
 
 ---
 
@@ -67,7 +67,7 @@ L'application est construite sur une architecture en couches (N-Tier) afin de d�
 
 ```
 +-------------------------------------------------+
-|                couche PRÉSENTATION               |
+|                couche PRÉSENTATION              |
 |  (Namespace: gsbMonolith.Forms)                 |
 |  WinForms, Contrôles UI, Gestion des événements |
 +-------------------------------------------------+
@@ -100,12 +100,13 @@ L'application est construite sur une architecture en couches (N-Tier) afin de d�
 - **`Patient.cs`** : Propriétés `Id`, `Name`, `FirstName`, `Age`, et une référence au `User` qui est son médecin.
 - Ces objets sont utilisés pour transférer les données entre la couche de présentation et la couche d'accès aux données.
 
-### 3.3. Couche de Présentation (Forms)
+### 3.3. Couche de Présentation (Forms et Views)
 
 - **Rôle** : Gérer l'interface utilisateur et l'interaction avec l'utilisateur.
-- **`MainForm.cs`** : Formulaire principal qui sert de conteneur MDI (Multiple Document Interface) ou de point de départ pour ouvrir les autres formulaires.
-- **`LoginForm.cs`** : Premier formulaire affiché, gère la saisie des identifiants.
-- **`PatientsForm.cs`**, **`MedicinesForm.cs`**, etc. : Formulaires dédiés à la gestion d'une entité spécifique. Ils contiennent des contrôles comme des `DataGridView` pour lister les données et des `TextBox` pour l'édition. La logique de ces formulaires se limite à la validation des entrées et à l'appel des méthodes DAO appropriées.
+- **`MainForm.cs`** : Formulaire principal qui sert de conteneur ou de point de départ pour l'application.
+- **`RegisterForm.cs` et `UserForm.cs`** : Formulairs de gestion des utilisateurs.
+- **`gsbMonolith.Views` (UserControls)** : Contient les vues modulaires (`DashboardView.cs`, `MedicinesView.cs`, `PatientsView.cs`, `PrescriptionsView.cs`) qui sont des contrôles utilisateur dynamiquement chargés dans le `MainForm`. Elles encapsulent la logique de présentation et l'interaction spécifique à chaque section de l'application. Chaque classe de vue est maintenant enrichie de **résumés de documentation XML** pour une meilleure clarté et maintenabilité.
+- La logique de ces vues et formulaires se limite à la validation des entrées et à l'appel des méthodes DAO appropriées.
 
 ---
 
@@ -167,30 +168,33 @@ USE gsbMonolith;
 ## 5. GUIDE D'INSTALLATION VERBEUX
 
 ### 5.1. Prérequis Logiciels
+- **.NET 8.0 SDK** : Assurez-vous d'avoir le SDK .NET 8.0 installé. Vous pouvez le télécharger depuis le site officiel de Microsoft.
 - **Visual Studio 2022** : Assurez-vous d'avoir installé le workload **"Développement desktop .NET"**.
 - **Docker Desktop** : Doit être en cours d'exécution sur votre machine.
 
 ### 5.2. Procédure de Lancement
 1.  **Clonage du Dépôt** :
     ```bash
-    git clone <URL_DU_DEPOT>
+    git clone https://github.com/RyukSylux/gsbMonolith
     cd gsbMonolith
     ```
-2.  **Démarrage de l'Environnement Docker** :
+2.  **Renommer .env.example en .env **
+
+3.  **Démarrage de l'Environnement Docker** :
     Cette étape est cruciale. Ouvrez un terminal (PowerShell, CMD, etc.) à la racine du projet.
     ```bash
     docker-compose up -d
     ```
     Le flag `-d` (detached) lance les conteneurs en arrière-plan.
 
-3.  **Vérification des Conteneurs** :
+4.  **Vérification des Conteneurs** :
     Vous pouvez vérifier que les conteneurs tournent correctement :
     ```bash
     docker ps
     ```
     Vous devriez voir deux conteneurs : `gsb_mysql_db` et `gsb_phpmyadmin`.
 
-4.  **Vérification de la Base de Données (Optionnel mais recommandé)** :
+5.  **Vérification de la Base de Données (Optionnel mais recommandé)** :
     - Ouvrez votre navigateur et allez sur `http://localhost:8080`.
     - Connectez-vous à phpMyAdmin :
         - **Serveur** : `db` (laisser tel quel)
@@ -198,11 +202,23 @@ USE gsbMonolith;
         - **Mot de passe** : (laisser vide)
     - Une fois connecté, vous devriez voir la base de données `gsbMonolith` dans le menu de gauche, avec toutes ses tables.
 
-5.  **Lancement de l'Application .NET** :
+6.  **Lancement de l'Application .NET via Visual Studio** :
     - Ouvrez `gsbMonolith.sln` dans Visual Studio 2022.
     - Le projet devrait se charger. Attendez que Visual Studio finisse de restaurer les dépendances NuGet.
     - Assurez-vous que le profil de build en haut est bien `Debug`.
     - Appuyez sur `F5` pour lancer le débogage. Le formulaire de connexion doit apparaître.
+
+7.  **Lancement de l'Application .NET via la ligne de commande (Alternative)** :
+    - Ouvrez un terminal à la racine du projet (`gsbMonolith`).
+    - Restaurez les dépendances :
+      ```bash
+      dotnet restore
+      ```
+    - Lancez l'application :
+      ```bash
+      dotnet run
+      ```
+    - Le formulaire de connexion doit apparaître.
 
 ### 5.3. Dépannage (Troubleshooting)
 - **Erreur `Cannot connect to any of the specified MySQL hosts`** :
@@ -233,17 +249,7 @@ USE gsbMonolith;
 
 ### 7.1. Dépendances NuGet
 - **`MySql.Data`** : Connecteur officiel de MySQL pour .NET, indispensable pour communiquer avec la base de données.
-- **Autres dépendances** : Le projet repose principalement sur les librairies standards du .NET Framework 6.
-
-### 7.2. Génération de la Documentation Technique
-Le projet inclut une configuration pour **DocFX**, un générateur de documentation pour .NET.
-Pour générer la documentation :
-1. Installez DocFX en suivant les instructions officielles.
-2. Exécutez la commande suivante à la racine du projet :
-   ```bash
-   docfx docfx/docfx.json --serve
-   ```
-3. La documentation sera générée dans le dossier `_site` et accessible sur `http://localhost:8081`.
+- **Autres dépendances** : Le projet repose principalement sur les librairies standards du .NET Framework 8.
 
 ---
 
