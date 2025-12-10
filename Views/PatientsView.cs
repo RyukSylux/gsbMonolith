@@ -6,6 +6,9 @@ using System.Windows.Forms;
 
 namespace gsbMonolith.Views
 {
+    /// <summary>
+    /// Represents the view for managing patients, allowing users to view, add, edit, and delete patient records.
+    /// </summary>
     public class PatientsView : UserControl
     {
         private PatientDAO patientDAO = new PatientDAO();

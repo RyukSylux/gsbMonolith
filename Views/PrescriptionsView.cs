@@ -10,6 +10,9 @@ using System.Windows.Forms;
 
 namespace gsbMonolith.Views
 {
+    /// <summary>
+    /// Represents the view for managing prescriptions, allowing users to create, view, edit, delete, and export prescriptions.
+    /// </summary>
     public class PrescriptionsView : UserControl
     {
         private PrescriptionDAO prescriptionDAO = new PrescriptionDAO();

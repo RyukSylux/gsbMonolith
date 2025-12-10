@@ -6,6 +6,9 @@ using System.Windows.Forms;
 
 namespace gsbMonolith.Views
 {
+    /// <summary>
+    /// Represents the view for managing medicines, allowing users to view, add, edit, and delete medicine entries.
+    /// </summary>
     public class MedicinesView : UserControl
     {
         private MedicineDAO medicineDAO = new MedicineDAO();

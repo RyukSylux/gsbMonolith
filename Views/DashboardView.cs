@@ -6,6 +6,9 @@ using gsbMonolith.DAO;
 
 namespace gsbMonolith.Views
 {
+    /// <summary>
+    /// Represents the dashboard view, displaying user-specific content and administrative tools if the user has the 'Admin' role.
+    /// </summary>
     public class DashboardView : UserControl
     {
         private User currentUser;
