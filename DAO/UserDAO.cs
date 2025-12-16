@@ -43,7 +43,21 @@ namespace gsbMonolith.DAO
                         string firstname = myReader.GetString("firstname");
                         bool role = myReader.GetBoolean("role");
                         connection.Close();
-                        return new User(id, name, firstname, role, email);
+
+                        var user = new User(id, name, firstname, role, email);
+
+                        // Log Login
+                        var journalDAO = new JournalDAO();
+                        journalDAO.Add(new Journal(
+                            user.Id,
+                            "Connexion",
+                            DateTime.Now,
+                            "Session",
+                            "Système",
+                            $"L'utilisateur {user.Name} {user.FirstName} s'est connecté."
+                        ));
+
+                        return user;
                     }
 
                     connection.Close();

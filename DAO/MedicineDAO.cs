@@ -12,6 +12,13 @@ namespace gsbMonolith.DAO
     public class MedicineDAO
     {
         private readonly Database db = new Database();
+        private readonly JournalDAO journalDAO = new JournalDAO();
+        private readonly User currentUser;
+
+        public MedicineDAO(User user)
+        {
+            this.currentUser = user;
+        }
 
         /// <summary>
         /// Retrieves all medicines along with their associated user information.
@@ -195,6 +202,18 @@ namespace gsbMonolith.DAO
                     int rows = myCommand.ExecuteNonQuery();
                     connection.Close();
 
+                    if (rows > 0)
+                    {
+                        journalDAO.Add(new Journal(
+                            currentUser.Id,
+                            "Création Médicament",
+                            DateTime.Now,
+                            "Medicine",
+                            $"Nom: {med.Name}",
+                            $"Le médicament {med.Name} a été ajouté par {currentUser.Name}."
+                        ));
+                    }
+
                     return rows > 0;
                 }
                 catch (Exception ex)
@@ -233,10 +252,20 @@ namespace gsbMonolith.DAO
                     myCommand.Parameters.AddWithValue("@dosage", med.Dosage);
                     myCommand.Parameters.AddWithValue("@name", med.Name);
                     myCommand.Parameters.AddWithValue("@description", med.Description);
-                    myCommand.Parameters.AddWithValue("@molecule", med.Molecule);
-
                     int rows = myCommand.ExecuteNonQuery();
                     connection.Close();
+
+                    if (rows > 0)
+                    {
+                        journalDAO.Add(new Journal(
+                            currentUser.Id,
+                            "Modification Médicament",
+                            DateTime.Now,
+                            "Medicine",
+                            $"ID: {med.Id_medicine}",
+                            $"Le médicament {med.Name} a été modifié par {currentUser.Name}."
+                        ));
+                    }
 
                     return rows > 0;
                 }
@@ -267,6 +296,18 @@ namespace gsbMonolith.DAO
 
                     int rows = myCommand.ExecuteNonQuery();
                     connection.Close();
+
+                    if (rows > 0)
+                    {
+                        journalDAO.Add(new Journal(
+                            currentUser.Id,
+                            "Suppression Médicament",
+                            DateTime.Now,
+                            "Medicine",
+                            $"ID: {id}",
+                            $"Le médicament ID {id} a été supprimé par {currentUser.Name}."
+                        ));
+                    }
 
                     return rows > 0;
                 }

@@ -14,6 +14,13 @@ namespace gsbMonolith.DAO
     {
         private readonly Database db = new Database();
         private readonly AppartientDAO appartientDAO = new AppartientDAO();
+        private readonly JournalDAO journalDAO = new JournalDAO();
+        private readonly User currentUser;
+
+        public PrescriptionDAO(User user)
+        {
+            this.currentUser = user;
+        }
 
         /// <summary>
         /// Retrieves a prescription by its ID.
@@ -92,6 +99,16 @@ namespace gsbMonolith.DAO
                 }
 
                 transaction.Commit();
+
+                journalDAO.Add(new Journal(
+                    currentUser.Id,
+                    "Création Prescription",
+                    DateTime.Now,
+                    "Prescription",
+                    $"ID: {newId}",
+                    $"Une prescription a été créée pour le patient ID {prescription.Id_patient} par {currentUser.Name}."
+                ));
+
                 return true;
             }
             catch (Exception ex)
@@ -221,6 +238,16 @@ namespace gsbMonolith.DAO
                 }
 
                 transaction.Commit();
+
+                journalDAO.Add(new Journal(
+                    currentUser.Id,
+                    "Modification Prescription",
+                    DateTime.Now,
+                    "Prescription",
+                    $"ID: {id_prescription}",
+                    $"La prescription ID {id_prescription} a été modifiée par {currentUser.Name}."
+                ));
+
                 return true;
             }
             catch
@@ -257,6 +284,16 @@ namespace gsbMonolith.DAO
                 cmd.ExecuteNonQuery();
 
                 transaction.Commit();
+
+                journalDAO.Add(new Journal(
+                    currentUser.Id,
+                    "Suppression Prescription",
+                    DateTime.Now,
+                    "Prescription",
+                    $"ID: {id_prescription}",
+                    $"La prescription ID {id_prescription} a été supprimée par {currentUser.Name}."
+                ));
+
                 return true;
             }
             catch (Exception ex)

@@ -28,16 +28,13 @@ namespace gsbMonolith.Utils
         /// <param name="patient">The patient for whom the prescription is created.</param>
         /// <param name="doctor">The doctor issuing the prescription.</param>
         /// <param name="meds">A list of tuples containing medicine information and the corresponding quantity.</param>
-        /// <remarks>
-        /// This method uses a <see cref="SaveFileDialog"/> to let the user choose where to save the PDF.
-        /// It also handles null values in patient/doctor/medicine fields to avoid crashes.
-        /// If an exception occurs, a message box will alert the user and the error will be logged to console.
-        /// </remarks>
+        /// <param name="currentUser">The user performing the export.</param>
         public static void ExportPrescription(
             Prescription presc,
             Patient patient,
             User doctor,
-            List<(Medicine med, int quantity)> meds)
+            List<(Medicine med, int quantity)> meds,
+            User currentUser)
         {
             try
             {
@@ -107,6 +104,17 @@ namespace gsbMonolith.Utils
 
                     doc.Close();
                 }
+
+                // Log Export
+                var journalDAO = new DAO.JournalDAO();
+                journalDAO.Add(new Journal(
+                    currentUser.Id,
+                    "Export PDF",
+                    DateTime.Now,
+                    "PDF",
+                    $"Prescription ID: {presc.Id_prescription}",
+                    $"L'ordonnance pour {patient.Name} {patient.Firstname} a été exportée par {currentUser.Name}."
+                ));
 
                 // OPEN THE FILE
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()

@@ -11,7 +11,7 @@ namespace gsbMonolith.Views
     /// </summary>
     public class PatientsView : UserControl
     {
-        private PatientDAO patientDAO = new PatientDAO();
+        private PatientDAO patientDAO;
         private User currentUser;
         
         // UI Controls
@@ -33,6 +33,7 @@ namespace gsbMonolith.Views
         public PatientsView(User user)
         {
             currentUser = user;
+            patientDAO = new PatientDAO(currentUser);
             SetupUI();
             LoadPatients();
         }

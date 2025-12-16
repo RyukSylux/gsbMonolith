@@ -300,6 +300,23 @@ ALTER TABLE `Patients`
 ALTER TABLE `Prescription`
   ADD CONSTRAINT `Prescription_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `Users` (`id_user`) ON DELETE CASCADE,
   ADD CONSTRAINT `Prescription_ibfk_2` FOREIGN KEY (`id_patient`) REFERENCES `Patients` (`id_patient`) ON DELETE CASCADE;
+--
+-- Structure de la table `Journal`
+--
+
+CREATE TABLE `Journal` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_user` int DEFAULT NULL,
+  `event_name` varchar(100) DEFAULT NULL,
+  `date` datetime DEFAULT NULL,
+  `type` varchar(50) DEFAULT NULL,
+  `related_object` text DEFAULT NULL,
+  `description` text,
+  PRIMARY KEY (`id`),
+  KEY `id_user` (`id_user`),
+  CONSTRAINT `Journal_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `Users` (`id_user`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

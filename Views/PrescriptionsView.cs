@@ -15,9 +15,9 @@ namespace gsbMonolith.Views
     /// </summary>
     public class PrescriptionsView : UserControl
     {
-        private PrescriptionDAO prescriptionDAO = new PrescriptionDAO();
-        private PatientDAO patientDAO = new PatientDAO();
-        private MedicineDAO medicineDAO = new MedicineDAO();
+        private PrescriptionDAO prescriptionDAO;
+        private PatientDAO patientDAO;
+        private MedicineDAO medicineDAO;
         private UserDAO userDAO = new UserDAO();
         private User currentUser;
         
@@ -54,6 +54,9 @@ namespace gsbMonolith.Views
         public PrescriptionsView(User user)
         {
             currentUser = user;
+            prescriptionDAO = new PrescriptionDAO(currentUser);
+            patientDAO = new PatientDAO(currentUser);
+            medicineDAO = new MedicineDAO(currentUser);
             SetupUI();
             LoadPrescriptions();
         }
@@ -397,7 +400,7 @@ namespace gsbMonolith.Views
 
                 var doctor = userDAO.GetUserById(presc.Id_user);
 
-                PdfExporter.ExportPrescription(presc, patient, doctor, meds);
+                PdfExporter.ExportPrescription(presc, patient, doctor, meds, currentUser);
             }
             catch(Exception ex) { MessageBox.Show("Erreur PDF: " + ex.Message); }
         }

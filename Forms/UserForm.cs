@@ -1,3 +1,4 @@
+using gsbMonolith.DAO;
 using gsbMonolith.Models;
 using gsbMonolith.Views;
 using System;
@@ -61,6 +62,12 @@ namespace gsbMonolith.Forms
             AddNavButton("🙍‍♂️ Patients", 220, () => new PatientsView(currentUser));
             AddNavButton("📄 Prescriptions", 280, () => new PrescriptionsView(currentUser));
 
+            // Journal (Admin only)
+            if (currentUser.Role)
+            {
+                AddNavButton("📜 Journal", 340, () => new JournalView(currentUser));
+            }
+
             // Logout Button (Bottom)
             var btnLogout = new Button
             {
@@ -74,6 +81,17 @@ namespace gsbMonolith.Forms
             };
             btnLogout.FlatAppearance.BorderSize = 0;
             btnLogout.Click += (s, e) => {
+                // Log Logout
+                var journalDAO = new JournalDAO();
+                journalDAO.Add(new Journal(
+                    currentUser.Id,
+                    "Déconnexion",
+                    DateTime.Now,
+                    "Session",
+                    "Système",
+                    $"L'utilisateur {currentUser.Name} {currentUser.FirstName} s'est déconnecté."
+                ));
+
                 this.Hide();
                 new MainForm().Show(); // Retour au login
             };

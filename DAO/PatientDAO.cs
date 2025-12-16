@@ -12,6 +12,13 @@ namespace gsbMonolith.DAO
     public class PatientDAO
     {
         private readonly Database db = new Database();
+        private readonly JournalDAO journalDAO = new JournalDAO();
+        private readonly User currentUser;
+
+        public PatientDAO(User user)
+        {
+            this.currentUser = user;
+        }
 
         /// <summary>
         /// Retrieves a patient by their ID.
@@ -76,6 +83,19 @@ namespace gsbMonolith.DAO
                     cmd.Parameters.AddWithValue("@gender", patient.Gender);
 
                     int rows = cmd.ExecuteNonQuery();
+
+                    if (rows > 0)
+                    {
+                        journalDAO.Add(new Journal(
+                            currentUser.Id,
+                            "Création Patient",
+                            DateTime.Now,
+                            "Patient",
+                            $"Nom: {patient.Name} {patient.Firstname}",
+                            $"Le patient {patient.Name} {patient.Firstname} a été créé par {currentUser.Name}."
+                        ));
+                    }
+
                     return rows > 0;
                 }
                 catch (Exception ex)
@@ -191,10 +211,21 @@ namespace gsbMonolith.DAO
                     connection.Open();
                     string query = "DELETE FROM Patients WHERE id_patient = @id_patient;";
                     MySqlCommand cmd = new MySqlCommand(query, connection);
-                    cmd.Parameters.AddWithValue("@id_patient", id_patient);
-
                     int rowsAffected = cmd.ExecuteNonQuery();
                     connection.Close();
+
+                    if (rowsAffected > 0)
+                    {
+                        journalDAO.Add(new Journal(
+                            currentUser.Id,
+                            "Suppression Patient",
+                            DateTime.Now,
+                            "Patient",
+                            $"ID: {id_patient}",
+                            $"Le patient ID {id_patient} a été supprimé par {currentUser.Name}."
+                        ));
+                    }
+
                     return rowsAffected > 0;
                 }
                 catch (Exception ex)
@@ -236,6 +267,19 @@ namespace gsbMonolith.DAO
 
                     int rowsAffected = cmd.ExecuteNonQuery();
                     connection.Close();
+
+                    if (rowsAffected > 0)
+                    {
+                        journalDAO.Add(new Journal(
+                            currentUser.Id,
+                            "Modification Patient",
+                            DateTime.Now,
+                            "Patient",
+                            $"ID: {patient.Id_patient}",
+                            $"Le patient {patient.Name} {patient.Firstname} a été modifié par {currentUser.Name}."
+                        ));
+                    }
+
                     return rowsAffected > 0;
                 }
                 catch (Exception ex)
