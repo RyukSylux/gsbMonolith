@@ -31,7 +31,7 @@ namespace gsbMonolith.Forms
             this.Size = new Size(1280, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1024, 768);
-            this.Text = "GSB - Gestion Médicale";
+            this.Text = "Tennis Club Lumière - Gestion";
             
             // --- Navbar (Left) ---
             navbarPanel = new Panel
@@ -45,7 +45,7 @@ namespace gsbMonolith.Forms
             var logoPanel = new Panel { Dock = DockStyle.Top, Height = 100, BackColor = Color.FromArgb(28, 37, 46) };
             var lblLogo = new Label 
             { 
-                Text = "GSB Medical", 
+                Text = "TCL Gestion", 
                 ForeColor = Color.White, 
                 Font = new Font("Segoe UI", 18F, FontStyle.Bold),
                 AutoSize = false,
@@ -57,9 +57,7 @@ namespace gsbMonolith.Forms
 
             // Nav Buttons
             AddNavButton("🏠 Accueil", 100, () => new DashboardView(currentUser));
-            AddNavButton("💊 Médicaments", 160, () => new MedicinesView(currentUser));
-            AddNavButton("🙍‍♂️ Patients", 220, () => new PatientsView(currentUser));
-            AddNavButton("📄 Prescriptions", 280, () => new PrescriptionsView(currentUser));
+            AddNavButton("🎾 Adhérents", 160, () => new AdherentsView(currentUser));
 
             // Logout Button (Bottom)
             var btnLogout = new Button

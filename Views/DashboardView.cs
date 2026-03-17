@@ -50,7 +50,7 @@ namespace gsbMonolith.Views
             Panel welcomePanel = new Panel { Dock = DockStyle.Top, Height = 100, Padding = new Padding(40, 20, 0, 0) };
             Label lblWelcome = new Label
             {
-                Text = $"Bienvenue, Dr. {currentUser.Name} 👋",
+                Text = $"Bienvenue, {currentUser.FirstName} {currentUser.Name} 👋",
                 Font = new Font("Segoe UI", 24F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(50, 50, 50),
                 AutoSize = true,
@@ -58,7 +58,7 @@ namespace gsbMonolith.Views
             };
              Label lblRole = new Label
             {
-                Text = currentUser.Role ? "Administrateur Système" : "Médecin / Prescripteur",
+                Text = currentUser.Role ? "Administrateur Club" : "Gestionnaire Adhérents",
                 Font = new Font("Segoe UI", 12F),
                 ForeColor = Color.Gray,
                 AutoSize = true,
@@ -69,9 +69,22 @@ namespace gsbMonolith.Views
             this.Controls.Add(welcomePanel);
 
             // Admin Section
-            if (currentUser.Role)
+            if (currentUser != null && currentUser.Role)
             {
                 SetupAdminUI();
+            }
+            else
+            {
+                // Message pour les non-admins
+                Label lblNoAdmin = new Label
+                {
+                    Text = "Accès restreint aux administrateurs pour la gestion des utilisateurs.",
+                    Font = new Font("Segoe UI", 10F, FontStyle.Italic),
+                    ForeColor = Color.Gray,
+                    AutoSize = true,
+                    Location = new Point(44, 120)
+                };
+                this.Controls.Add(lblNoAdmin);
             }
             
             // Edit Panel (Hidden by default)
@@ -288,6 +301,12 @@ namespace gsbMonolith.Views
 
         private void BtnSaveUser_Click(object sender, EventArgs e)
         {
+            if (currentUser == null || !currentUser.Role)
+            {
+                MessageBox.Show("Action non autorisée.");
+                return;
+            }
+
             if(string.IsNullOrWhiteSpace(txtEmail.Text) || string.IsNullOrWhiteSpace(txtName.Text))
             {
                 MessageBox.Show("Champs obligatoires manquants.");

@@ -29,10 +29,10 @@ namespace gsbMonolith
 
 #if DEBUG
             var userDao = new UserDAO();
-            var connectedUser = userDao.Login("thomas.robert@clinic.fr", "password");
+            var connectedUser = userDao.Login("hugo.garnier@tcl.fr", "password");
             if (connectedUser == null)
             {
-                MessageBox.Show("Échec de la connexion. Veuillez vérifier vos identifiants.");
+                MessageBox.Show("Ã‰chec de la connexion. Veuillez vÃ©rifier vos identifiants.");
             }
             else
             {

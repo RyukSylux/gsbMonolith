@@ -1,4 +1,4 @@
-﻿using gsbMonolith.DAO;
+using gsbMonolith.DAO;
 using System;
 using System.Windows.Forms;
 
@@ -36,7 +36,7 @@ namespace gsbMonolith.Forms
             
             Label lblLogo = new Label
             {
-                Text = "GSB",
+                Text = "TCL",
                 Font = new Font("Segoe UI", 48F, FontStyle.Bold),
                 ForeColor = Color.White,
                 AutoSize = true,
@@ -45,7 +45,7 @@ namespace gsbMonolith.Forms
             
             Label lblTagline = new Label
             {
-                Text = "Gestion des Services\nBancaires & Médicaux",
+                Text = "Club de Tennis Lumière\nInterface de Gestion",
                 Font = new Font("Segoe UI", 12F, FontStyle.Regular),
                 ForeColor = Color.LightGray,
                 AutoSize = true,
@@ -95,7 +95,7 @@ namespace gsbMonolith.Forms
             // Login Header
             Label lblLoginTitle = new Label
             {
-                Text = "Connexion",
+                Text = "Accès Gestion",
                 Font = new Font("Segoe UI", 24F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(33, 43, 54),
                 AutoSize = true,
