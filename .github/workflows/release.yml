@@ -30,7 +30,7 @@ jobs:
             $content = $content -replace 'const string AWS_HOST = "DEFAULT_HOST"', 'const string AWS_HOST = "${{ secrets.AWS_HOST }}"'
             $content = $content -replace 'const string AWS_USER = "DEFAULT_USER"', 'const string AWS_USER = "${{ secrets.AWS_USER }}"'
             $content = $content -replace 'const string AWS_PASSWORD = "DEFAULT_PASSWORD"', 'const string AWS_PASSWORD = "${{ secrets.AWS_PASSWORD }}"'
-            $content = $content -replace 'const string AWS_PORT = "DEFAULT_PORT"', 'const string AWS_PORT = "${{ secrets.AWS_PORT }}"'
+            $content = $content -replace 'const string AWS_PORT = "3306"', 'const string AWS_PORT = "${{ secrets.AWS_PORT }}"'
             
             Set-Content $filePath $content
             Write-Host "✓ Secrets injectés avec succès"
