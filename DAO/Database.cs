@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using MySql.Data.MySqlClient;
 
 namespace gsbMonolith.DAO
@@ -43,15 +43,21 @@ namespace gsbMonolith.DAO
         {
 #if DEBUG
             const string host = "localhost";
+            const string port = "3306";
+            const string database = "gsbMonolith";
             const string user = "root";
             const string password = "";
+            const string sslMode = "none";
 #else
             // In Release mode, read values from MSBuild-injected constants
             string host = AWS_HOST;
+            string port = AWS_PORT;
+            string database = "gsbMonolith";
             string user = AWS_USER;
             string password = AWS_PASSWORD;
+            string sslMode = "Required";
 #endif
-            connectionString = $"server={host};database=gsbMonolith;user={user};password={password};";
+            connectionString = $"server={host};port={port};database={database};user={user};password={password};SslMode={sslMode};";
         }
 
 #if !DEBUG
@@ -59,6 +65,16 @@ namespace gsbMonolith.DAO
         /// Placeholder value for the AWS host, replaced at build time by MSBuild.
         /// </summary>
         public const string AWS_HOST = "DEFAULT_HOST";
+
+        /// <summary>
+        /// Placeholder value for the AWS port, replaced at build time by MSBuild.
+        /// </summary>
+        public const string AWS_PORT = "3306";
+
+        /// <summary>
+        /// Placeholder value for the AWS database name, replaced at build time by MSBuild.
+        /// </summary>
+        public const string AWS_DATABASE = "DEFAULT_DATABASE";
 
         /// <summary>
         /// Placeholder value for the AWS database user, replaced at build time by MSBuild.
