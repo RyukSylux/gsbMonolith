@@ -1,7 +1,7 @@
 # DOCUMENTATION TECHNIQUE COMPLÈTE – PROJET GSB MONOLITH
 
 ![C#](https://img.shields.io/badge/C%23-11.0-blue?logo=c-sharp)
-![.NET Framework](https://img.shields.io/badge/.NET-6.0-blueviolet?logo=.net)
+![.NET Framework](https://img.shields.io/badge/.NET-8.0-blueviolet?logo=.net)
 ![Windows Forms](https://img.shields.io/badge/Windows_Forms-WinForms-blue)
 ![MySQL](https://img.shields.io/badge/MySQL-8.1-orange?logo=mysql)
 ![Docker](https://img.shields.io/badge/Docker-Powered-blue?logo=docker)
@@ -228,6 +228,14 @@ USE gsbMonolith;
     - Un autre service utilise le port `3306` ou `8080`. Arrêtez ce service ou modifiez les ports dans le fichier `docker-compose.yml`.
 - **L'application se lance mais les données n'apparaissent pas** :
     - Vérifiez dans phpMyAdmin que le script `init.sql` a bien inséré les données de test. Si les tables sont vides, vous pouvez forcer la réinitialisation de la base de données avec `docker-compose down -v` puis `docker-compose up -d`.
+
+### 5.4. Comptes de démonstration
+
+Pour faciliter les tests, le système est initialisé avec plusieurs comptes. **Le mot de passe pour tous ces comptes est : `password`**.
+
+* **Médecin** : `alice.martin@clinic.fr`
+* **Admin** : `hugo.durand@clinic.fr`
+* **Admin** : `sarah.lemoine@admin.fr`
 
 ---
 
