@@ -271,14 +271,37 @@ Pour faciliter les tests, le système est initialisé avec plusieurs comptes. **
 
 ---
 
-## 9. AUTEURS
+## 9. DÉPLOIEMENT CLOUD & DÉMONSTRATION (AZURE)
 
-- **Morgan Bourré**
-- Projet réalisé dans le cadre du **BTS SIO — GSB**
-- Année : **2025**
+Pour faciliter l'évaluation du jury sans nécessiter d'installation locale, une infrastructure de démonstration a été déployée sur **Microsoft Azure**.
+
+### 9.1. Architecture de la Démo
+L'environnement cloud reproduit fidèlement le fonctionnement de l'application via une architecture hybride :
+- **Serveur d'Application & DB** : Une machine virtuelle Windows hébergeant l'application .NET et le serveur MySQL.
+- **Passerelle d'Accès (Apache Guacamole)** : Une machine virtuelle Linux servant de passerelle sécurisée (Gateway) permettant de manipuler l'application WinForms directement depuis un navigateur web.
+- **Portail Statique** : Une Landing Page hébergée sur Azure Storage pour centraliser les accès.
+
+### 9.2. Accès à la Démonstration
+L'accès à l'environnement de démonstration est centralisé. **La Landing Page permet de piloter l'allumage et l'extinction des ressources Azure** (VM Windows et Passerelle Guacamole) afin d'optimiser la consommation des crédits.
+
+1.  **Accéder au Portail** : [https://btsgsbmonolith.z28.web.core.windows.net/](https://btsgsbmonolith.z28.web.core.windows.net/)
+2.  **Démarrer l'environnement** : Cliquez sur les boutons de contrôle sur la page pour allumer les serveurs.
+3.  **Connexion** : Une fois les serveurs actifs, utilisez le bouton "Accès Guacamole" avec les identifiants suivants :
+    -   **Utilisateur** : `examinateur`
+    -   **Mot de passe** : `MotDePasse123!`
+
+*(Une fois connecté sur Guacamole, cliquez sur la connexion "VM Windows" pour accéder au bureau distant. **L'application GSB Monolith s'exécute automatiquement au démarrage** ; utilisez les comptes de test fournis à la [section 5.4](#54-comptes-de-démonstration) pour vous connecter).*
 
 ---
 
-## 10. LICENCE
+## 10. AUTEURS
+
+- **Morgan Bourré**
+- Projet réalisé dans le cadre du **BTS SIO — GSB**
+- Année : **2026**
+
+---
+
+## 11. LICENCE
 
 Ce projet est distribué sous la **licence MIT**.
