@@ -1,4 +1,4 @@
-﻿using gsbMonolith.Models;
+using gsbMonolith.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -142,8 +142,8 @@ namespace gsbMonolith.DAO
                         Id = reader.GetInt32("id_prescription"),
                         Validité = reader.GetDateTime("validity").ToString("yyyy-MM-dd"),
                         Docteur = $"{reader["doctor_firstname"]} {reader["doctor_name"]}",
-                        Patient = $"{reader["patient_firstname"]} {reader["patient_name"]} ({reader["patient_age"]} years)",
-                        Médicaments = reader["medicines"] != DBNull.Value ? reader["medicines"].ToString() : "None"
+                        Patient = $"{reader["patient_firstname"]} {reader["patient_name"]} ({reader["patient_age"]} ans)",
+                        Médicaments = reader["medicines"] != DBNull.Value ? reader["medicines"].ToString() : "Aucun"
                     });
                 }
             }
@@ -179,7 +179,7 @@ namespace gsbMonolith.DAO
         /// <param name="newValidity">New validity date.</param>
         /// <param name="medicines">List of new medicine associations.</param>
         /// <returns>True if the update succeeded; otherwise false.</returns>
-        public bool UpdatePrescription(int id_prescription, string newValidity, List<(int Id_medicine, int Quantity)> medicines)
+        public bool UpdatePrescription(int id_prescription, int id_user, int id_patient, string newValidity, List<(int Id_medicine, int Quantity)> medicines)
         {
             using var connection = db.GetConnection();
             connection.Open();
@@ -188,12 +188,14 @@ namespace gsbMonolith.DAO
 
             try
             {
-                // Update validity
+                // Update validity, patient and doctor (current user)
                 using var updateCmd = new MySqlCommand(
-                    @"UPDATE Prescription SET validity = @validity WHERE id_prescription = @id;",
+                    @"UPDATE Prescription SET validity = @validity, id_patient = @id_patient, id_user = @id_user WHERE id_prescription = @id;",
                     connection, transaction);
 
                 updateCmd.Parameters.AddWithValue("@validity", newValidity);
+                updateCmd.Parameters.AddWithValue("@id_patient", id_patient);
+                updateCmd.Parameters.AddWithValue("@id_user", id_user);
                 updateCmd.Parameters.AddWithValue("@id", id_prescription);
                 updateCmd.ExecuteNonQuery();
 

@@ -47,7 +47,7 @@ namespace gsbMonolith.DAO
             const string database = "gsbMonolith";
             const string user = "root";
             const string password = "";
-            const string sslMode = "none";
+            const string sslMode = "Disabled";
 #else
             // In Release mode, read values from MSBuild-injected constants
             string host = AWS_HOST;

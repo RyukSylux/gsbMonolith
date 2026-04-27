@@ -110,6 +110,8 @@ namespace gsbMonolith.Forms
                 Cursor = Cursors.Hand,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
+            btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(45, 55, 72); // Même couleur que l'actif au survol
+            btn.FlatAppearance.MouseDownBackColor = Color.FromArgb(60, 70, 90); // Un peu plus clair au clic
 
             btn.Click += (s, e) => {
                 SetActiveButton(btn);

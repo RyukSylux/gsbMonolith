@@ -1,6 +1,7 @@
 using gsbMonolith.DAO;
 using gsbMonolith.Models;
 using gsbMonolith.Utils;
+using gsbMonolith.Views.Modals;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -25,31 +26,6 @@ namespace gsbMonolith.Views
         private DataGridView dgvPrescriptions;
         private Panel headerPanel;
         private Button btnExport, btnAdd;
-
-        // Edit Panel UI
-        private Panel editPanel;
-        private ComboBox cmbPatients;
-        private DateTimePicker dtpValidity;
-        private ComboBox cmbMedicines;
-        private NumericUpDown numQuantity;
-        private Button btnAddMed, btnSave, btnCancel;
-        private DataGridView dgvSelectedMeds;
-        private int? editingPrescriptionId = null;
-
-        // Dragging Logic
-        private bool isDragging = false;
-        private Point dragCursorPoint;
-        private Point dragFormPoint;
-
-        // Temporary storage for meds in edit mode
-        private List<MedicineSelection> currentMeds = new List<MedicineSelection>();
-
-        private class MedicineSelection
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public int Quantity { get; set; }
-        }
 
         public PrescriptionsView(User user)
         {
@@ -102,12 +78,12 @@ namespace gsbMonolith.Views
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 Cursor = Cursors.Hand
             };
-            btnAdd.Click += (s, e) => ShowEditPanel(null);
+            btnAdd.Click += (s, e) => OpenPrescriptionModal(null);
 
             btnExport = new Button
             {
                 Text = "Exporter PDF",
-                BackColor = Color.SeaGreen, // Changed to Green for Export distinction
+                BackColor = Color.SeaGreen,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
@@ -137,6 +113,7 @@ namespace gsbMonolith.Views
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 RowHeadersVisible = false
             };
+            dgvPrescriptions.DataBindingComplete += (s, e) => dgvPrescriptions.ClearSelection();
             
             dgvPrescriptions.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(240, 240, 240);
             dgvPrescriptions.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
@@ -145,115 +122,27 @@ namespace gsbMonolith.Views
             dgvPrescriptions.RowTemplate.Height = 40;
 
             dgvPrescriptions.CellDoubleClick += (s, e) => {
-                if(e.RowIndex >= 0) ShowEditPanel((int)dgvPrescriptions.Rows[e.RowIndex].Cells["Id"].Value);
+                if(e.RowIndex >= 0) 
+                {
+                    int id = (int)dgvPrescriptions.Rows[e.RowIndex].Cells["Id"].Value;
+                    OpenPrescriptionModal(prescriptionDAO.GetPrescriptionById(id));
+                }
             };
 
-            // Context Menu
             var ctx = new ContextMenuStrip();
             ctx.Items.Add("Modifier", null, (s, e) => {
                  if(dgvPrescriptions.SelectedRows.Count > 0) 
-                    ShowEditPanel((int)dgvPrescriptions.SelectedRows[0].Cells["Id"].Value);
+                 {
+                    int id = (int)dgvPrescriptions.SelectedRows[0].Cells["Id"].Value;
+                    OpenPrescriptionModal(prescriptionDAO.GetPrescriptionById(id));
+                 }
             });
             ctx.Items.Add("Supprimer", null, BtnDelete_Click);
             dgvPrescriptions.ContextMenuStrip = ctx;
 
-
-            // --- Edit Panel (Overlay) ---
-            editPanel = new Panel 
-            { 
-                Size = new Size(600, 600), 
-                BackColor = Color.White, 
-                Visible = false,
-                BorderStyle = BorderStyle.FixedSingle 
-            };
-
-            // Header for dragging and closing
-            Panel editHeader = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Color.FromArgb(240, 240, 240) };
-            editHeader.MouseDown += (s, e) => { isDragging = true; dragCursorPoint = Cursor.Position; dragFormPoint = editPanel.Location; };
-            editHeader.MouseMove += (s, e) => { if (isDragging) { Point dif = Point.Subtract(Cursor.Position, new Size(dragCursorPoint)); editPanel.Location = Point.Add(dragFormPoint, new Size(dif)); } };
-            editHeader.MouseUp += (s, e) => { isDragging = false; };
-
-            Label lblEditTitle = new Label { Text = "Détails Prescription", Font = new Font("Segoe UI", 14F, FontStyle.Bold), Location = new Point(15, 12), AutoSize = true };
-            editHeader.Controls.Add(lblEditTitle);
-
-            Button btnCloseX = new Button 
-            { 
-                Text = "✕", 
-                Dock = DockStyle.Right, 
-                Width = 50, 
-                FlatStyle = FlatStyle.Flat, 
-                FlatAppearance = { BorderSize = 0 },
-                BackColor = Color.Transparent,
-                ForeColor = Color.Gray,
-                Font = new Font("Segoe UI", 12F, FontStyle.Regular),
-                Cursor = Cursors.Hand
-            };
-            btnCloseX.Click += (s, e) => editPanel.Visible = false;
-            editHeader.Controls.Add(btnCloseX);
-
-            editPanel.Controls.Add(editHeader);
-            
-            // Patient & Date
-            Label lblPatient = new Label { Text = "Patient", Location = new Point(20, 60), AutoSize = true, ForeColor = Color.Gray };
-            cmbPatients = new ComboBox { Location = new Point(20, 80), Width = 250, DropDownStyle = ComboBoxStyle.DropDownList };
-            
-            Label lblDate = new Label { Text = "Date de validité", Location = new Point(300, 60), AutoSize = true, ForeColor = Color.Gray };
-            dtpValidity = new DateTimePicker { Location = new Point(300, 80), Width = 250, Format = DateTimePickerFormat.Short };
-
-            // Add Medicine Section
-            GroupBox grpMeds = new GroupBox { Text = "Ajouter des médicaments", Location = new Point(20, 130), Size = new Size(540, 80), ForeColor = Color.Gray };
-            
-            cmbMedicines = new ComboBox { Location = new Point(20, 30), Width = 250, DropDownStyle = ComboBoxStyle.DropDownList };
-            numQuantity = new NumericUpDown { Location = new Point(290, 30), Width = 80, Minimum = 1, Maximum = 100, Value = 1 };
-            btnAddMed = new Button { Text = "Ajouter", Location = new Point(390, 29), Width = 100, BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            btnAddMed.Click += BtnAddMed_Click;
-
-            grpMeds.Controls.Add(cmbMedicines);
-            grpMeds.Controls.Add(numQuantity);
-            grpMeds.Controls.Add(btnAddMed);
-
-            // Meds List Grid
-            dgvSelectedMeds = new DataGridView 
-            { 
-                Location = new Point(20, 230), 
-                Size = new Size(540, 250),
-                BackgroundColor = Color.WhiteSmoke,
-                BorderStyle = BorderStyle.FixedSingle,
-                AllowUserToAddRows = false,
-                ReadOnly = true,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-            };
-            // Remove med on double click
-            dgvSelectedMeds.CellDoubleClick += (s, e) => {
-                if(e.RowIndex >= 0) {
-                    currentMeds.RemoveAt(e.RowIndex);
-                    RefreshMedsGrid();
-                }
-            };
-
-            // Actions
-            btnSave = new Button { Text = "Enregistrer", BackColor = Color.FromArgb(40, 167, 69), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(20, 520), Size = new Size(150, 40) };
-            btnSave.Click += BtnSave_Click;
-
-            btnCancel = new Button { Text = "Annuler", BackColor = Color.Gray, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(190, 520), Size = new Size(150, 40) };
-            btnCancel.Click += (s, e) => editPanel.Visible = false;
-
-            editPanel.Controls.AddRange(new Control[] { lblPatient, cmbPatients, lblDate, dtpValidity, grpMeds, dgvSelectedMeds, btnSave, btnCancel });
-
             // Assembly
-            this.Controls.Add(editPanel);
             this.Controls.Add(dgvPrescriptions);
             this.Controls.Add(headerPanel);
-
-            this.SizeChanged += (s, e) => CenterEditPanel();
-        }
-
-        private void CenterEditPanel()
-        {
-            if (editPanel != null)
-                editPanel.Location = new Point((this.Width - editPanel.Width) / 2, (this.Height - editPanel.Height) / 2);
         }
 
         private void LoadPrescriptions()
@@ -266,106 +155,42 @@ namespace gsbMonolith.Views
             catch(Exception ex) { MessageBox.Show("Erreur: " + ex.Message); }
         }
 
-        private void LoadCombos()
+        private void OpenPrescriptionModal(Prescription prescription)
         {
-            // Patients
-            cmbPatients.DataSource = patientDAO.GetPatientsForComboBox();
-            cmbPatients.DisplayMember = "FullName";
-            cmbPatients.ValueMember = "Id_patient";
-            
-            // Medicines
-            cmbMedicines.DataSource = medicineDAO.GetAllMedicines();
-            cmbMedicines.DisplayMember = "Name";
-            cmbMedicines.ValueMember = "Id_medicine";
-        }
-
-        private void ShowEditPanel(int? id)
-        {
-            LoadCombos();
-            currentMeds.Clear();
-            editingPrescriptionId = id;
-
-            if (id.HasValue)
+            List<(int Id, int Quantity)> existingMeds = null;
+            if (prescription != null)
             {
-                var p = prescriptionDAO.GetPrescriptionById(id.Value);
-                if (p != null)
+                existingMeds = prescriptionDAO.GetMedicinesWithQuantities(prescription.Id_prescription)
+                                              .Select(m => (m.Id_medicine, m.Quantity))
+                                              .ToList();
+            }
+
+            using (var modal = new PrescriptionEditForm(prescription, existingMeds))
+            {
+                if (modal.ShowDialog() == DialogResult.OK)
                 {
-                    cmbPatients.SelectedValue = p.Id_patient;
-                    dtpValidity.Value = DateTime.Parse(p.Date);
-                    
-                    var details = prescriptionDAO.GetMedicinesWithQuantities(id.Value);
-                    foreach(var d in details)
+                    try
                     {
-                        var m = medicineDAO.GetById(d.Id_medicine);
-                        if(m != null)
-                            currentMeds.Add(new MedicineSelection { Id = m.Id_medicine, Name = m.Name, Quantity = d.Quantity });
+                        var medList = modal.SelectedMeds;
+
+                        if (prescription != null)
+                        {
+                            prescriptionDAO.UpdatePrescription(prescription.Id_prescription, currentUser.Id, modal.SelectedPatientId, modal.ValidityDate, medList);
+                        }
+                        else
+                        {
+                            var p = new Prescription(0, currentUser.Id, modal.SelectedPatientId, modal.ValidityDate);
+                            prescriptionDAO.CreatePrescriptionWithMedicines(p, medList);
+                        }
+
+                        LoadPrescriptions();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Erreur lors de l'enregistrement: " + ex.Message);
                     }
                 }
             }
-            else
-            {
-                dtpValidity.Value = DateTime.Now;
-                if(cmbPatients.Items.Count > 0) cmbPatients.SelectedIndex = 0;
-            }
-
-            RefreshMedsGrid();
-            editPanel.Visible = true;
-            editPanel.BringToFront();
-            CenterEditPanel();
-        }
-
-        private void RefreshMedsGrid()
-        {
-            dgvSelectedMeds.DataSource = null;
-            dgvSelectedMeds.DataSource = currentMeds;
-            dgvSelectedMeds.Columns["Id"].Visible = false;
-            dgvSelectedMeds.Columns["Name"].HeaderText = "Médicament";
-            dgvSelectedMeds.Columns["Quantity"].HeaderText = "Quantité";
-        }
-
-        private void BtnAddMed_Click(object sender, EventArgs e)
-        {
-            if (cmbMedicines.SelectedValue == null) return;
-            
-            int id = (int)cmbMedicines.SelectedValue;
-            var medObj = cmbMedicines.SelectedItem as Medicine;
-            string name = medObj?.Name ?? "Inconnu";
-            int qty = (int)numQuantity.Value;
-
-            var existing = currentMeds.FirstOrDefault(m => m.Id == id);
-            if(existing != null)
-            {
-                existing.Quantity += qty;
-            }
-            else
-            {
-                currentMeds.Add(new MedicineSelection { Id = id, Name = name, Quantity = qty });
-            }
-            RefreshMedsGrid();
-        }
-
-        private void BtnSave_Click(object sender, EventArgs e)
-        {
-            if (cmbPatients.SelectedValue == null) { MessageBox.Show("Sélectionnez un patient."); return; }
-            if (currentMeds.Count == 0) { MessageBox.Show("Ajoutez au moins un médicament."); return; }
-
-            int patientId = (int)cmbPatients.SelectedValue;
-            string date = dtpValidity.Value.ToString("yyyy-MM-dd");
-            
-            var medList = currentMeds.Select(m => (m.Id, m.Quantity)).ToList();
-
-            if (editingPrescriptionId.HasValue)
-            {
-                prescriptionDAO.UpdatePrescription(editingPrescriptionId.Value, date, medList);
-            }
-            else
-            {
-                var p = new Prescription(0, currentUser.Id, patientId, date);
-                prescriptionDAO.CreatePrescriptionWithMedicines(p, medList);
-            }
-
-            editPanel.Visible = false;
-            LoadPrescriptions();
         }
 
         private void BtnDelete_Click(object sender, EventArgs e)
