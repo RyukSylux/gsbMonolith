@@ -6,6 +6,10 @@ using System.Windows.Forms;
 
 namespace gsbMonolith.Forms
 {
+    /// <summary>
+    /// Represents the main shell form for authenticated users.
+    /// Provides navigation between different views (Dashboard, Medicines, Patients, Prescriptions).
+    /// </summary>
     public partial class UserForm : Form
     {
         private User currentUser;
@@ -15,6 +19,10 @@ namespace gsbMonolith.Forms
         private Panel contentPanel;
         private Button activeNavButton;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserForm"/> class.
+        /// </summary>
+        /// <param name="user">The currently logged-in user.</param>
         public UserForm(User user)
         {
             InitializeComponent(); // Vide maintenant

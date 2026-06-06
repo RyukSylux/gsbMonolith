@@ -20,6 +20,10 @@ namespace gsbMonolith.Views
         private Panel headerPanel;
         private Button btnAdd;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PatientsView"/> class.
+        /// </summary>
+        /// <param name="user">The currently logged-in user.</param>
         public PatientsView(User user)
         {
             currentUser = user;

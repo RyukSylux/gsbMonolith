@@ -1,4 +1,4 @@
-﻿using gsbMonolith.Models;
+using gsbMonolith.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -99,6 +99,8 @@ namespace gsbMonolith.DAO
                 try
                 {
                     connection.Open();
+                    // INNER JOIN links each patient (Patients table) to their corresponding doctor (Users table)
+                    // using the id_user foreign key, ensuring we retrieve doctor details with patient profiles.
                     string query = @"
                         SELECT 
                             p.id_patient,

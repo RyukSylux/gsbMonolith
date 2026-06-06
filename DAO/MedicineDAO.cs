@@ -1,4 +1,4 @@
-﻿using gsbMonolith.Models;
+using gsbMonolith.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -27,6 +27,8 @@ namespace gsbMonolith.DAO
                 {
                     connection.Open();
 
+                    // LEFT JOIN is used here to retrieve all medicines even if the associated 
+                    // user (creator/manager) has been deleted or is not assigned (id_user is null).
                     string query = @"
                         SELECT 
                             m.id_medicine,
@@ -117,6 +119,8 @@ namespace gsbMonolith.DAO
                 {
                     connection.Open();
 
+                    // INNER JOIN is used here because we only want to fetch medicine records
+                    // that have a valid associated creator user (doctor/admin).
                     MySqlCommand myCommand = new MySqlCommand(@"
                         SELECT 
                             m.id_medicine,

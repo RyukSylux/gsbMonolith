@@ -1,11 +1,18 @@
-﻿using gsbMonolith.DAO;
+using gsbMonolith.DAO;
 using System;
 using System.Windows.Forms;
 
 namespace gsbMonolith.Forms
 {
+    /// <summary>
+    /// Represents the main login form of the application.
+    /// Provides username and password input fields to authenticate users.
+    /// </summary>
     public partial class MainForm : Form
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainForm"/> class.
+        /// </summary>
         public MainForm()
         {
             InitializeComponent();

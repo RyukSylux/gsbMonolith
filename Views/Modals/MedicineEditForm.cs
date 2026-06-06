@@ -5,17 +5,40 @@ using gsbMonolith.Models;
 
 namespace gsbMonolith.Views.Modals
 {
+    /// <summary>
+    /// Form allowing users to create or edit medicine records.
+    /// Provides input validation and returns the entered data via properties.
+    /// </summary>
     public class MedicineEditForm : Form
     {
+        /// <summary>
+        /// Gets the entered name of the medicine.
+        /// </summary>
         public string MedName => txtName.Text;
+
+        /// <summary>
+        /// Gets the entered active molecule of the medicine.
+        /// </summary>
         public string MedMolecule => txtMolecule.Text;
+
+        /// <summary>
+        /// Gets the entered dosage of the medicine.
+        /// </summary>
         public string MedDosage => txtDosage.Text;
+
+        /// <summary>
+        /// Gets the entered description of the medicine.
+        /// </summary>
         public string MedDescription => txtDescription.Text;
 
         private TextBox txtName, txtMolecule, txtDosage, txtDescription;
         private Button btnSave, btnCancel;
         private Medicine _medicine;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MedicineEditForm"/> class.
+        /// </summary>
+        /// <param name="medicine">The medicine object to edit, or null to create a new one.</param>
         public MedicineEditForm(Medicine medicine = null)
         {
             _medicine = medicine;

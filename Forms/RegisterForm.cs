@@ -5,10 +5,16 @@ using System.Windows.Forms;
 #if DEBUG
 namespace gsbMonolith.Forms
 {
+        /// <summary>
+        /// Form allowing new users to self-register during debug or development phases.
+        /// </summary>
         public partial class RegisterForm : Form
         {
             private readonly UserDAO userDAO = new UserDAO();
     
+            /// <summary>
+            /// Initializes a new instance of the <see cref="RegisterForm"/> class.
+            /// </summary>
             public RegisterForm()
             {
                 InitializeComponent();

@@ -19,6 +19,10 @@ namespace gsbMonolith.Views
         private DataGridView dgvUsers;
         private Panel adminPanel;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DashboardView"/> class.
+        /// </summary>
+        /// <param name="user">The currently logged-in user.</param>
         public DashboardView(User user)
         {
             currentUser = user;

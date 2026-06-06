@@ -8,10 +8,25 @@ using gsbMonolith.DAO;
 
 namespace gsbMonolith.Views.Modals
 {
+    /// <summary>
+    /// Form allowing users to create or edit prescription records.
+    /// Manages the patient selection, validity date, and a grid of associated medicines and their quantities.
+    /// </summary>
     public class PrescriptionEditForm : Form
     {
+        /// <summary>
+        /// Gets the selected patient's identifier.
+        /// </summary>
         public int SelectedPatientId => (int)cmbPatients.SelectedValue;
+
+        /// <summary>
+        /// Gets the validity date of the prescription formatted as yyyy-MM-dd.
+        /// </summary>
         public string ValidityDate => dtpValidity.Value.ToString("yyyy-MM-dd");
+
+        /// <summary>
+        /// Gets the list of selected medicines and their quantities.
+        /// </summary>
         public List<(int Id, int Quantity)> SelectedMeds => _currentMeds.Select(m => (m.Id, m.Quantity)).ToList();
 
         private ComboBox cmbPatients;
@@ -33,6 +48,11 @@ namespace gsbMonolith.Views.Modals
             public int Quantity { get; set; }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PrescriptionEditForm"/> class.
+        /// </summary>
+        /// <param name="prescription">The prescription to edit, or null to create a new one.</param>
+        /// <param name="existingMeds">A list of existing medicine associations and their quantities.</param>
         public PrescriptionEditForm(Prescription prescription = null, List<(int Id, int Quantity)> existingMeds = null)
         {
             _prescription = prescription;

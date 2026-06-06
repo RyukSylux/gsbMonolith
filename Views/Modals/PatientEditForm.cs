@@ -5,17 +5,40 @@ using gsbMonolith.Models;
 
 namespace gsbMonolith.Views.Modals
 {
+    /// <summary>
+    /// Form allowing users to create or edit patient records.
+    /// Provides input validation for age and required fields.
+    /// </summary>
     public class PatientEditForm : Form
     {
+        /// <summary>
+        /// Gets the entered name of the patient.
+        /// </summary>
         public string PatientName => txtName.Text;
+
+        /// <summary>
+        /// Gets the entered first name of the patient.
+        /// </summary>
         public string PatientFirstName => txtFirstname.Text;
+
+        /// <summary>
+        /// Gets the entered age of the patient. Returns 0 if invalid.
+        /// </summary>
         public int PatientAge => int.TryParse(txtAge.Text, out int age) ? age : 0;
+
+        /// <summary>
+        /// Gets the entered gender of the patient.
+        /// </summary>
         public string PatientGender => txtGender.Text;
 
         private TextBox txtName, txtFirstname, txtAge, txtGender;
         private Button btnSave, btnCancel;
         private Patient _patient;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PatientEditForm"/> class.
+        /// </summary>
+        /// <param name="patient">The patient object to edit, or null to create a new one.</param>
         public PatientEditForm(Patient patient = null)
         {
             _patient = patient;

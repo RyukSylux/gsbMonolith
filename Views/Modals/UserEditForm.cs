@@ -5,12 +5,35 @@ using gsbMonolith.Models;
 
 namespace gsbMonolith.Views.Modals
 {
+    /// <summary>
+    /// Form allowing system administrators to create or edit system users (Doctors/Administrators).
+    /// Provides inputs for user details, password setup/change, and role assignment.
+    /// </summary>
     public class UserEditForm : Form
     {
+        /// <summary>
+        /// Gets the entered last name of the user.
+        /// </summary>
         public string UserName => txtName.Text;
+
+        /// <summary>
+        /// Gets the entered first name of the user.
+        /// </summary>
         public string UserFirstName => txtFirstname.Text;
+
+        /// <summary>
+        /// Gets the entered email of the user.
+        /// </summary>
         public string UserEmail => txtEmail.Text;
+
+        /// <summary>
+        /// Gets the entered password of the user.
+        /// </summary>
         public string UserPassword => txtPassword.Text;
+
+        /// <summary>
+        /// Gets a value indicating whether the user is designated as an Administrator (true) or a standard user (false).
+        /// </summary>
         public bool UserRole => chkRole.Checked;
 
         private TextBox txtName, txtFirstname, txtEmail, txtPassword;
@@ -18,6 +41,10 @@ namespace gsbMonolith.Views.Modals
         private Button btnSave, btnCancel;
         private User _user;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserEditForm"/> class.
+        /// </summary>
+        /// <param name="user">The user to edit, or null to create a new user.</param>
         public UserEditForm(User user = null)
         {
             _user = user;

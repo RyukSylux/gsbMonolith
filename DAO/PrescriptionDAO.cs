@@ -118,6 +118,13 @@ namespace gsbMonolith.DAO
             {
                 connection.Open();
 
+                // This query builds a aggregated view of prescriptions:
+                // - INNER JOINs connect the prescription with the issuing doctor (Users) and the patient (Patients).
+                // - LEFT JOINs link the junction table (Appartient) and the medicines table (Medicine) so we 
+                //   still list the prescription even if it doesn't contain any medicine yet.
+                // - GROUP_CONCAT aggregates multiple row entries for medicines (name and quantity) into a 
+                //   single comma-separated string per prescription ID.
+                // - GROUP BY consolidates all associated table rows under a single prescription identifier.
                 string query = @"
                     SELECT 
                         p.id_prescription, p.validity,
@@ -176,6 +183,8 @@ namespace gsbMonolith.DAO
         /// Updates a prescription’s validity and optionally its associated medicines.
         /// </summary>
         /// <param name="id_prescription">ID of the prescription.</param>
+        /// <param name="id_user">ID of the doctor/user updating the prescription.</param>
+        /// <param name="id_patient">ID of the patient receiving the prescription.</param>
         /// <param name="newValidity">New validity date.</param>
         /// <param name="medicines">List of new medicine associations.</param>
         /// <returns>True if the update succeeded; otherwise false.</returns>
