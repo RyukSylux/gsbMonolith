@@ -377,3 +377,42 @@ Voici l'ensemble des requêtes SQL exécutées par l'application pour réaliser 
   ```sql
   SELECT COUNT(*) FROM Prescription WHERE id_patient = 1;
   ```
+
+---
+
+## 7. Note d'Architecture SQL : Choix d'implémentation de la restriction de suppression
+
+### Utilisation d'un Trigger de base de données vs Logique applicative
+
+Lors de la conception de la sécurité pour la suppression des patients, la question s'est posée d'implémenter cette règle via un trigger SQL `BEFORE DELETE` directement dans la base de données. 
+
+Voici l'analyse comparative de cette approche par rapport à notre implémentation applicative :
+
+#### Proposition du Trigger SQL :
+```sql
+DELIMITER //
+
+CREATE TRIGGER before_delete_patient
+BEFORE DELETE ON Patients
+FOR EACH ROW
+BEGIN
+    DECLARE presc_count INT;
+    
+    SELECT COUNT(*) INTO presc_count 
+    FROM Prescription 
+    WHERE id_patient = OLD.id_patient;
+    
+    IF presc_count > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Impossible de supprimer ce patient car des prescriptions lui ont été attribuées.';
+    END IF;
+END //
+
+DELIMITER ;
+```
+
+#### Pourquoi le trigger SQL a été écarté au profit de la logique applicative ?
+1. **Cloisonnement des rôles (Médecin vs Administrateur) :** L'application utilise une chaîne de connexion unique pour accéder à la base de données MySQL. Par conséquent, le moteur de base de données est incapable de différencier si la requête de suppression provient d'un Médecin (qui doit être bloqué) ou d'un Administrateur (qui a le droit de supprimer en cascade).
+2. **Effets de bord sur le rôle Administrateur :** Si le trigger SQL était activé, la suppression en cascade serait interdite pour tout le monde, bloquant également l'administrateur et violant ainsi le cahier des charges.
+3. **Expérience utilisateur (UX) :** Gérer ce contrôle dans la couche C# (via `PrescriptionDAO.HasPrescriptions`) permet d'afficher un message d'avertissement propre et adapté dans l'interface Windows Forms avant même de solliciter la base de données, plutôt que de devoir intercepter et traduire une exception SQL brute.
+

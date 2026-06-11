@@ -36,6 +36,7 @@ namespace gsbMonolith.Views.Modals
         private Button btnAddMed, btnSave, btnCancel;
         private DataGridView dgvSelectedMeds;
         private List<MedicineSelection> _currentMeds = new List<MedicineSelection>();
+        private BindingSource bsSelectedMeds = new BindingSource();
         
         private PatientDAO patientDAO = new PatientDAO();
         private MedicineDAO medicineDAO = new MedicineDAO();
@@ -128,6 +129,9 @@ namespace gsbMonolith.Views.Modals
             dgvSelectedMeds.ColumnHeadersDefaultCellStyle.Padding = new Padding(5, 0, 5, 0);
             dgvSelectedMeds.DataBindingComplete += (s, e) => dgvSelectedMeds.ClearSelection();
 
+            bsSelectedMeds.DataSource = _currentMeds;
+            dgvSelectedMeds.DataSource = bsSelectedMeds;
+            
             dgvSelectedMeds.CellDoubleClick += (s, e) => {
                 if(e.RowIndex >= 0) {
                     _currentMeds.RemoveAt(e.RowIndex);
@@ -166,8 +170,7 @@ namespace gsbMonolith.Views.Modals
 
         private void RefreshMedsGrid()
         {
-            dgvSelectedMeds.DataSource = null;
-            dgvSelectedMeds.DataSource = _currentMeds;
+            bsSelectedMeds.ResetBindings(false);
             
             if (dgvSelectedMeds.Columns["Id"] != null) dgvSelectedMeds.Columns["Id"].Visible = false;
             
