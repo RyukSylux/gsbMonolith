@@ -145,8 +145,8 @@ namespace gsbMonolith.DAO
                         patients.Add(new
                         {
                             Id = reader.GetInt32("id_patient"),
-                            Name = reader["patient_name"].ToString(),
-                            Firstname = reader["patient_firstname"].ToString(),
+                            Name = gsbMonolith.Utils.SecurityHelper.MaskName(reader["patient_name"].ToString()),
+                            Firstname = gsbMonolith.Utils.SecurityHelper.MaskName(reader["patient_firstname"].ToString()),
                             Age = reader.GetInt32("age"),
                             Gender = reader["gender"].ToString(),
                             Category = reader["category_name"] == DBNull.Value ? "Aucune" : reader["category_name"].ToString(),
@@ -332,8 +332,8 @@ namespace gsbMonolith.DAO
                         patients.Add(new
                         {
                             Id = reader.GetInt32("id_patient"),
-                            Name = reader["patient_name"].ToString(),
-                            Firstname = reader["patient_firstname"].ToString(),
+                            Name = gsbMonolith.Utils.SecurityHelper.MaskName(reader["patient_name"].ToString()),
+                            Firstname = gsbMonolith.Utils.SecurityHelper.MaskName(reader["patient_firstname"].ToString()),
                             Age = reader.GetInt32("age"),
                             Gender = reader["gender"].ToString(),
                             Category = reader["category_name"] == DBNull.Value ? "Aucune" : reader["category_name"].ToString(),

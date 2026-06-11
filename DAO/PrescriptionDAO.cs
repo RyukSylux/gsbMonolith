@@ -144,12 +144,16 @@ namespace gsbMonolith.DAO
 
                 while (reader.Read())
                 {
+                    string pFirst = reader["patient_firstname"].ToString() ?? "";
+                    string pName = reader["patient_name"].ToString() ?? "";
+                    string maskedPatient = $"{gsbMonolith.Utils.SecurityHelper.MaskName(pFirst)} {gsbMonolith.Utils.SecurityHelper.MaskName(pName)}";
+
                     prescriptions.Add(new
                     {
                         Id = reader.GetInt32("id_prescription"),
                         Validité = reader.GetDateTime("validity").ToString("yyyy-MM-dd"),
                         Docteur = $"{reader["doctor_firstname"]} {reader["doctor_name"]}",
-                        Patient = $"{reader["patient_firstname"]} {reader["patient_name"]} ({reader["patient_age"]} ans)",
+                        Patient = $"{maskedPatient} ({reader["patient_age"]} ans)",
                         Médicaments = reader["medicines"] != DBNull.Value ? reader["medicines"].ToString() : "Aucun"
                     });
                 }
@@ -313,12 +317,16 @@ namespace gsbMonolith.DAO
 
                 while (reader.Read())
                 {
+                    string pFirst = reader["patient_firstname"].ToString() ?? "";
+                    string pName = reader["patient_name"].ToString() ?? "";
+                    string maskedPatient = $"{gsbMonolith.Utils.SecurityHelper.MaskName(pFirst)} {gsbMonolith.Utils.SecurityHelper.MaskName(pName)}";
+
                     prescriptions.Add(new
                     {
                         Id = reader.GetInt32("id_prescription"),
                         Validité = reader.GetDateTime("validity").ToString("yyyy-MM-dd"),
                         Docteur = $"{reader["doctor_firstname"]} {reader["doctor_name"]}",
-                        Patient = $"{reader["patient_firstname"]} {reader["patient_name"]} ({reader["patient_age"]} ans)",
+                        Patient = $"{maskedPatient} ({reader["patient_age"]} ans)",
                         Médicaments = reader["medicines"] != DBNull.Value ? reader["medicines"].ToString() : "Aucun"
                     });
                 }

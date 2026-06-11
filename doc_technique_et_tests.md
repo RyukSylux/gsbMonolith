@@ -141,7 +141,20 @@ La suppression d'un patient disposant d'un historique médical (prescriptions pa
 
 ---
 
-## 4. Cahier de Recette (Scénarios de Validation)
+## 4. Feature 4 : Pseudonymisation des Données Sensibles (RGPD)
+
+### Spécification du besoin
+Conformément au Règlement Général sur la Protection des Données (RGPD) et au respect du secret médical, les données d'identité nominatives des patients ne doivent pas s'afficher en clair sur les écrans généraux de l'application (grilles de listage de patients et d'ordonnances). 
+
+### Solution technique
+- Création d'une classe de service de sécurité **[SecurityHelper.cs](file:///c:/Users/sylux/Documents/git/gsbMonolith/Utils/SecurityHelper.cs)**.
+- Méthode `MaskName(string name)` : Conserve la première moitié des caractères et ajoute un nombre fixe de trois astérisques (`***`) à la fin (Exemple : "Dupont" -> "Dup***", "Luc" -> "L***"), masquant ainsi la longueur réelle du nom ou prénom.
+- Le masquage s'applique de manière homogène dans les listages généraux (`PatientDAO` et `PrescriptionDAO`).
+- **Dé-masquage lors de la modification :** Lors de l'ouverture du formulaire d'édition (`PatientEditForm`), l'application charge les données réelles et claires depuis le serveur en utilisant `GetPatientById`, garantissant que le médecin peut lire et corriger l'identité réelle. De même, les exports PDF officiels utilisent les données non-masquées.
+
+---
+
+## 5. Cahier de Recette (Scénarios de Validation)
 
 ### Scénario de Test 1 : Assigner une catégorie à un patient
 * **Objectif :** Affecter un patient à une catégorie et persister en base.
@@ -228,7 +241,6 @@ La suppression d'un patient disposant d'un historique médical (prescriptions pa
   ```sql
   SELECT COUNT(*) FROM Patients WHERE name = 'Dupont' AND firstname = 'Marie';
   ```
-  *(Résultat attendu : 1. Prouve que le patient est toujours présent).*
 
 ### Scénario de Test 8 : Suppression d'un patient sans prescription (Médecin connecté)
 * **Objectif :** Autoriser la suppression si aucun historique médical n'est menacé.
@@ -242,7 +254,6 @@ La suppression d'un patient disposant d'un historique médical (prescriptions pa
   ```sql
   SELECT COUNT(*) FROM Patients WHERE name = 'Test Suppression';
   ```
-  *(Résultat attendu : 0).*
 
 ### Scénario de Test 9 : Suppression d'un patient par l'administrateur (Accès total)
 * **Objectif :** Valider le comportement de suppression globale d'administration.
@@ -254,8 +265,26 @@ La suppression d'un patient disposant d'un historique médical (prescriptions pa
 * **Résultat attendu :** Le patient est supprimé sans blocage de prescription.
 * **Vérification SQL de la suppression en cascade :**
   ```sql
-  -- Vérifier que le patient est supprimé
   SELECT COUNT(*) FROM Patients WHERE id_patient = 2; -- Doit renvoyer 0
-  -- Vérifier que ses ordonnances associées ont été automatiquement purgées
   SELECT COUNT(*) FROM Prescription WHERE id_patient = 2; -- Doit renvoyer 0
   ```
+
+### Scénario de Test 10 : Masquage des noms dans le tableau principal (GDPR)
+* **Objectif :** Vérifier que les noms sont rendus anonymes dans les tableaux généraux.
+* **Actions :**
+  1. Se connecter à l'application.
+  2. Naviguer sur l'écran **Gestion des Patients** ou **Prescriptions**.
+* **Résultat attendu :** Les colonnes *Nom* et *Prénom* n'apparaissent pas en clair. Par exemple, Marie Dupont est affichée sous la forme de `Ma*** Dup***`.
+* **Vérification SQL de persistance :**
+  ```sql
+  -- S'assurer que le nom réel est bien conservé intact en base (seul l'affichage est masqué)
+  SELECT name, firstname FROM Patients WHERE id_patient = 1;
+  ```
+  *(Résultat attendu : 'Dupont', 'Marie').*
+
+### Scénario de Test 11 : Affichage en clair pour modification
+* **Objectif :** S'assurer que l'identité réelle est lisible lors de l'édition d'une fiche patient.
+* **Actions :**
+  1. Sur le tableau des patients, repérer la ligne pseudonymisée `Ma*** Dup***`.
+  2. Double-cliquer sur cette ligne pour ouvrir le formulaire de modification.
+* **Résultat attendu :** Les champs textuels *Nom* et *Prénom* de la fenêtre d'édition affichent les données en clair (`Dupont` et `Marie`) permettant la lecture et la correction.
