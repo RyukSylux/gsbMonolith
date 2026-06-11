@@ -40,6 +40,7 @@ namespace gsbMonolith.Views.Modals
         private PatientDAO patientDAO = new PatientDAO();
         private MedicineDAO medicineDAO = new MedicineDAO();
         private Prescription _prescription;
+        private User _currentUser;
 
         private class MedicineSelection
         {
@@ -53,9 +54,11 @@ namespace gsbMonolith.Views.Modals
         /// </summary>
         /// <param name="prescription">The prescription to edit, or null to create a new one.</param>
         /// <param name="existingMeds">A list of existing medicine associations and their quantities.</param>
-        public PrescriptionEditForm(Prescription prescription = null, List<(int Id, int Quantity)> existingMeds = null)
+        /// <param name="currentUser">The currently logged-in user.</param>
+        public PrescriptionEditForm(Prescription prescription = null, List<(int Id, int Quantity)> existingMeds = null, User currentUser = null)
         {
             _prescription = prescription;
+            _currentUser = currentUser;
             if (existingMeds != null)
             {
                 foreach (var item in existingMeds)
@@ -145,7 +148,14 @@ namespace gsbMonolith.Views.Modals
 
         private void LoadCombos()
         {
-            cmbPatients.DataSource = patientDAO.GetPatientsForComboBox();
+            if (_currentUser != null && !_currentUser.Role)
+            {
+                cmbPatients.DataSource = patientDAO.GetPatientsForComboBoxByDoctorId(_currentUser.Id);
+            }
+            else
+            {
+                cmbPatients.DataSource = patientDAO.GetPatientsForComboBox();
+            }
             cmbPatients.DisplayMember = "FullName";
             cmbPatients.ValueMember = "Id_patient";
             

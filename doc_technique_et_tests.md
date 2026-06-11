@@ -1,14 +1,14 @@
 # Documentation Technique & Cahier de Recette
-## Feature : Catégories de Patients & Contre-indications Médicamenteuses
+## Projet : gsbMonolith
 
-Cette documentation décrit les modifications techniques apportées au projet **gsbMonolith**, le schéma de base de données associé, ainsi que les protocoles de tests (Cahier de Recette) permettant de valider le bon fonctionnement de la fonctionnalité.
+Cette documentation décrit les modifications techniques apportées au projet **gsbMonolith**, le schéma de base de données associé, ainsi que les protocoles de tests (Cahier de Recette) permettant de valider le bon fonctionnement des fonctionnalités.
 
 ---
 
-## 1. Architecture & Schéma Relationnel (Base de données)
+## 1. Feature 1 : Catégories de Patients & Contre-indications
 
-### Choix de Conception Technique
-Pour garantir l'évolution du système sans altérer la structure physique des tables existantes (`Patients` et `Medicine`), nous avons opté pour une approche modulaire en introduisant des tables de liaison. Cela évite les régressions sur la base de données héritée (legacy) et assure la conformité aux exigences du sujet.
+### Architecture & Schéma Relationnel (Base de données)
+Pour garantir l'évolution du système sans altérer la structure physique des tables existantes (`Patients` et `Medicine`), nous avons opté pour une approche modulaire en introduisant des tables de liaison. Cela évite les régressions sur la base de données héritée (legacy).
 
 ```mermaid
 erDiagram
@@ -57,15 +57,14 @@ CREATE TABLE `Category` (
   PRIMARY KEY (`id_category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Insertion des jeux de données de test requis
+-- Insertion des catégories requises
 INSERT INTO `Category` (`id_category`, `name`) VALUES
 (1, 'Femme enceinte'),
 (2, 'Enfant'),
 (3, 'Personne âgée'),
 (4, 'Diabétique');
 
--- 2. Table d'association Patient <-> Catégorie (relation 1-à-1 ou 1-à-0)
--- La clé primaire sur id_patient garantit l'unicité de la catégorie pour un patient donné
+-- 2. Table d'association Patient <-> Catégorie
 CREATE TABLE `PatientCategory` (
   `id_patient` int NOT NULL,
   `id_category` int NOT NULL,
@@ -74,7 +73,7 @@ CREATE TABLE `PatientCategory` (
   CONSTRAINT `fk_pc_category` FOREIGN KEY (`id_category`) REFERENCES `Category` (`id_category`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Attribution de catégories par défaut pour le jeu d'essai
+-- Attribution de catégories par défaut
 INSERT INTO `PatientCategory` (`id_patient`, `id_category`) VALUES
 (1, 1),   -- Dupont Marie -> Femme enceinte
 (13, 2),  -- Masson Emma -> Enfant
@@ -96,65 +95,60 @@ INSERT INTO `ForbiddenMedicine` (`id_category`, `id_medicine`) VALUES
 (2, 6); -- Enfant : Seroplex interdit
 ```
 
+### Implémentation Logicielle (C# / WinForms)
+- **Modèles :** Introduction de la classe `Category.cs` ; ajout de `Id_category` et `CategoryName` à `Patient.cs` et de `ForbiddenCategoryIds` à `Medicine.cs`.
+- **DAOs :** Création de `CategoryDAO.cs`. Modification de `PatientDAO.cs` et `MedicineDAO.cs` pour persister les associations dans les tables de liaison.
+- **Vues :** Menu déroulant de choix de catégorie dans `PatientEditForm.cs`, liste des contre-indications à cocher dans `MedicineEditForm.cs`, et contrôle de sécurité bloquant dans `PrescriptionEditForm.cs`.
+
 ---
 
-## 2. Implémentation Logicielle (C# / WinForms)
+## 2. Feature 2 : Cloisonnement des Patients par Médecin
 
-L'implémentation respecte le patron d'architecture **DAO (Data Access Object)** de l'application :
+### Principe de Conception (1 méthode = 1 fonctionnalité)
+Afin de respecter scrupuleusement les consignes pédagogiques du BTS, **les méthodes existantes d'accès global aux données (`GetAllPatients`, `GetAllPrescriptions`, etc.) n'ont pas été modifiées**.
 
-1. **Modèle de données :**
-   - Addition de la classe `Category.cs` représentant une catégorie.
-   - Ajout des propriétés optionnelles `Id_category` et `CategoryName` dans `Patient.cs` pour transporter l'information sans altérer l'objet d'origine.
-   - Ajout de la propriété `ForbiddenCategoryIds` dans `Medicine.cs`.
+Nous avons implémenté de nouvelles méthodes dédiées dans la couche DAO pour exécuter le filtrage directement au niveau de la base de données, évitant ainsi le chargement inutile de données en mémoire.
 
-2. **Accès aux données (DAO) :**
-   - Création de `CategoryDAO.cs` avec les méthodes `GetAllCategories()` et `IsMedicineForbidden(int catId, int medId)` pour vérifier la sécurité de la prescription en temps réel.
-   - Modification de `PatientDAO.cs` :
-     - Utilisation d'un `LEFT JOIN` avec la table associative pour récupérer la catégorie lors du listage de tous les patients.
-     - Gestion des liaisons dans `Insert` et `UpdatePatient`.
-   - Modification de `MedicineDAO.cs` :
-     - Gestion de l'enregistrement des interdictions dans `ForbiddenMedicine` lors de l'insertion ou de la modification d'un médicament.
+### Nouveaux Composants de la couche DAO
 
-3. **Interface Graphique & Validation :**
-   - **Formulaire Patient :** Intégration d'une `ComboBox` pour affecter une catégorie de patient (avec option "Aucune").
-   - **Formulaire Médicament :** Intégration d'une `CheckedListBox` listant les catégories à exclure.
-   - **Validation de Prescription :** Vérification instantanée lors de l'événement d'ajout d'un médicament et lors de la sauvegarde finale de la prescription dans `PrescriptionEditForm.cs`.
+Dans **[PatientDAO.cs](file:///c:/Users/sylux/Documents/git/gsbMonolith/DAO/PatientDAO.cs)** :
+1. `GetPatientsByDoctorId(int id_user)` : Retourne la liste des patients attribués à un médecin spécifique (utilisé pour remplir la grille principale).
+2. `GetPatientsForComboBoxByDoctorId(int id_user)` : Retourne une liste de modèles réduits pour remplir le menu déroulant lors de la création d'ordonnances.
+
+Dans **[PrescriptionDAO.cs](file:///c:/Users/sylux/Documents/git/gsbMonolith/DAO/PrescriptionDAO.cs)** :
+1. `GetPrescriptionsByDoctorId(int id_user)` : Retourne uniquement les ordonnances créées par le médecin connecté.
+
+### Intégration dans les Vues
+Dans les différentes fenêtres de l'interface graphique (`PatientsView.cs`, `PrescriptionsView.cs` et `PrescriptionEditForm.cs`), un contrôle sur le rôle de l'utilisateur connecté est effectué :
+- Si l'utilisateur est un **Administrateur** (`currentUser.Role == true`) : Utilisation des méthodes globales `GetAll` pour voir tout le parc de la clinique.
+- Si l'utilisateur est un **Médecin** (`currentUser.Role == false`) : Utilisation systématique des méthodes filtrées par identifiant médecin (`currentUser.Id`).
 
 ---
 
 ## 3. Cahier de Recette (Scénarios de Validation)
 
-Cette partie présente les étapes permettant de prouver la robustesse de l'application lors de la soutenance.
-
 ### Scénario de Test 1 : Assigner une catégorie à un patient
-* **Objectif :** Vérifier qu'un médecin peut catégoriser un patient et que la liaison est persistée en base de données.
+* **Objectif :** Affecter un patient à une catégorie et persister en base.
 * **Actions IHM :**
   1. Aller sur l'onglet **Gestion des Patients**.
-  2. Double-cliquer sur le patient *Dupont Marie* ou cliquer sur *Nouveau Patient*.
-  3. Sélectionner "Femme enceinte" dans la liste déroulante *Catégorie de patient*.
-  4. Cliquer sur *Enregistrer*.
-* **Résultat attendu :**
-  - La fenêtre se ferme sans erreur.
-  - La colonne **Catégorie** affiche "Femme enceinte" pour le patient dans le tableau de bord.
+  2. Double-cliquer sur le patient *Dupont Marie*.
+  3. Sélectionner "Femme enceinte" dans *Catégorie de patient* et enregistrer.
+* **Résultat attendu :** La colonne **Catégorie** affiche "Femme enceinte" dans le tableau.
 * **Vérification SQL :**
   ```sql
   SELECT p.firstname, p.name, c.name AS categorie
   FROM Patients p
   INNER JOIN PatientCategory pc ON p.id_patient = pc.id_patient
   INNER JOIN Category c ON pc.id_category = c.id_category
-  WHERE p.name = 'Dupont' AND p.firstname = 'Marie';
+  WHERE p.name = 'Dupont';
   ```
-  *(Résultat attendu : une ligne renvoyant 'Marie', 'Dupont', 'Femme enceinte')*
 
 ### Scénario de Test 2 : Définir un médicament interdit pour une catégorie
-* **Objectif :** Configurer une contre-indication sur un produit pharmaceutique.
+* **Objectif :** Bannir un médicament pour une certaine population de patients.
 * **Actions IHM :**
   1. Aller sur l'onglet **Gestion des Médicaments**.
-  2. Double-cliquer sur le médicament *Ibuprofène*.
-  3. Dans la liste à cocher des contre-indications, cocher "Femme enceinte".
-  4. Cliquer sur *Enregistrer*.
-* **Résultat attendu :**
-  - Les modifications sont enregistrées.
+  2. Éditer le médicament *Ibuprofène*.
+  3. Cocher "Femme enceinte" dans les contre-indications et enregistrer.
 * **Vérification SQL :**
   ```sql
   SELECT m.name AS medicament, c.name AS categorie_interdite
@@ -163,27 +157,49 @@ Cette partie présente les étapes permettant de prouver la robustesse de l'appl
   INNER JOIN Category c ON fm.id_category = c.id_category
   WHERE m.name = 'Ibuprofène';
   ```
-  *(Résultat attendu : une ligne associant 'Ibuprofène' à 'Femme enceinte')*
 
-### Scénario de Test 3 : Sécurité de la prescription (Cas nominal bloquant)
-* **Objectif :** Empêcher la validation d'une ordonnance contenant un médicament interdit pour le profil du patient.
+### Scénario de Test 3 : Sécurité de la prescription (Cas bloquant)
+* **Objectif :** Empêcher la prescription d'un médicament contre-indiqué.
 * **Actions IHM :**
   1. Aller sur l'onglet **Prescriptions** et cliquer sur **Nouvelle Prescription**.
   2. Choisir le patient *Dupont Marie* (catégorie : *Femme enceinte*).
-  3. Sélectionner le médicament *Ibuprofène* dans la liste déroulante et cliquer sur le bouton **Ajouter**.
-* **Résultat attendu :**
-  - Un message d'erreur pop-up bloquant s'affiche :
-    > *« Le médicament 'Ibuprofène' est interdit / contre-indiqué pour la catégorie 'Femme enceinte' de ce patient ! »*
-  - Le médicament **n'est pas ajouté** à la liste de la prescription en cours.
-* **Vérification SQL de non-insertion :**
-  Pour confirmer qu'aucune ligne illégale n'a été insérée en base de données :
+  3. Sélectionner *Ibuprofène* et cliquer sur **Ajouter**.
+* **Résultat attendu :** Une pop-up d'erreur bloque l'ajout avec le message :
+  > *« Le médicament 'Ibuprofène' est interdit / contre-indiqué pour la catégorie 'Femme enceinte' de ce patient ! »*
+
+### Scénario de Test 4 : Cloisonnement médecin (Accès restreint)
+* **Objectif :** S'assurer qu'un médecin ne voit que ses propres dossiers.
+* **Actions :**
+  1. Se connecter avec l'identifiant médecin `alice.martin@clinic.fr` (ID = 1).
+  2. Cliquer sur l'onglet **Gestion des Patients**.
+* **Résultat attendu :** Seuls les patients associés à Alice Martin (comme Marie Dupont) apparaissent. Les patients des autres médecins sont invisibles.
+* **Vérification SQL :**
   ```sql
-  SELECT pr.id_prescription, p.name AS patient, m.name AS medicament
-  FROM Appartient a
-  INNER JOIN Prescription pr ON a.id_prescription = pr.id_prescription
-  INNER JOIN Patients p ON pr.id_patient = p.id_patient
-  INNER JOIN PatientCategory pc ON p.id_patient = pc.id_patient
-  INNER JOIN Medicine m ON a.id_medicine = m.id_medicine
-  INNER JOIN ForbiddenMedicine fm ON pc.id_category = fm.id_category AND m.id_medicine = fm.id_medicine;
+  SELECT id_patient, name, firstname, id_user FROM Patients WHERE id_user = 1;
   ```
-  *(Résultat attendu : **0 ligne retournée**. Ce qui prouve qu'aucune prescription interdite n'est présente en base de données).*
+  *(Le résultat doit être identique en nombre et en données aux lignes affichées dans l'application)*
+
+### Scénario de Test 5 : Accès administrateur (Vue globale)
+* **Objectif :** S'assurer que l'administrateur conserve un accès total.
+* **Actions :**
+  1. Se connecter avec l'identifiant administrateur `sarah.lemoine@admin.fr` (ID = 5).
+  2. Cliquer sur l'onglet **Gestion des Patients**.
+* **Résultat attendu :** Tous les patients de la clinique, peu importe le médecin affecté, s'affichent.
+* **Vérification SQL :**
+  ```sql
+  SELECT COUNT(*) FROM Patients;
+  ```
+  *(Le nombre total renvoyé par cette requête SQL doit correspondre exactement au nombre de lignes visibles par l'administrateur dans l'IHM)*
+
+### Scénario de Test 6 : Filtrage dans la création d'ordonnance
+* **Objectif :** Restreindre le choix des patients lors de la rédaction d'une ordonnance.
+* **Actions :**
+  1. Se connecter avec le compte d'Alice Martin (ID = 1).
+  2. Aller sur **Prescriptions** et cliquer sur **Nouvelle Prescription**.
+  3. Dérouler la liste de sélection *Patient*.
+* **Résultat attendu :** Seuls les patients dont Alice Martin est le médecin traitant sont sélectionnables dans la liste déroulante.
+* **Vérification SQL :**
+  ```sql
+  SELECT id_patient, firstname, name FROM Patients WHERE id_user = 1 ORDER BY name, firstname ASC;
+  ```
+  *(La liste déroulante doit comporter exactement cette liste de noms).*

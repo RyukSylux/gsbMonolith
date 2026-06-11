@@ -153,7 +153,14 @@ namespace gsbMonolith.Views
         {
             try
             {
-                dgvPrescriptions.DataSource = prescriptionDAO.GetAllPrescriptions();
+                if (currentUser.Role)
+                {
+                    dgvPrescriptions.DataSource = prescriptionDAO.GetAllPrescriptions();
+                }
+                else
+                {
+                    dgvPrescriptions.DataSource = prescriptionDAO.GetPrescriptionsByDoctorId(currentUser.Id);
+                }
                 if (dgvPrescriptions.Columns["Id"] != null) dgvPrescriptions.Columns["Id"].Visible = false;
             }
             catch(Exception ex) { MessageBox.Show("Erreur: " + ex.Message); }
@@ -169,7 +176,7 @@ namespace gsbMonolith.Views
                                               .ToList();
             }
 
-            using (var modal = new PrescriptionEditForm(prescription, existingMeds))
+            using (var modal = new PrescriptionEditForm(prescription, existingMeds, currentUser))
             {
                 if (modal.ShowDialog() == DialogResult.OK)
                 {

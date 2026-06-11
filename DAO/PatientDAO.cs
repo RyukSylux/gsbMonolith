@@ -291,5 +291,107 @@ namespace gsbMonolith.DAO
                 }
             }
         }
+
+        /// <summary>
+        /// Retrieves all patients assigned to a specific doctor (user ID), with their associated doctor's information.
+        /// </summary>
+        /// <param name="id_user">The unique identifier of the doctor/user.</param>
+        /// <returns>A list of dynamic objects representing patients and their doctor.</returns>
+        public List<dynamic> GetPatientsByDoctorId(int id_user)
+        {
+            List<dynamic> patients = new List<dynamic>();
+
+            using (var connection = db.GetConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    string query = @"
+                        SELECT 
+                            p.id_patient,
+                            p.name AS patient_name,
+                            p.firstname AS patient_firstname,
+                            p.age,
+                            p.gender,
+                            u.firstname AS doctor_firstname,
+                            u.name AS doctor_name,
+                            c.name AS category_name
+                        FROM Patients p
+                        INNER JOIN Users u ON p.id_user = u.id_user
+                        LEFT JOIN PatientCategory pc ON p.id_patient = pc.id_patient
+                        LEFT JOIN Category c ON pc.id_category = c.id_category
+                        WHERE p.id_user = @id_user
+                        ORDER BY p.id_patient ASC;";
+
+                    using MySqlCommand cmd = new MySqlCommand(query, connection);
+                    cmd.Parameters.AddWithValue("@id_user", id_user);
+                    using var reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        patients.Add(new
+                        {
+                            Id = reader.GetInt32("id_patient"),
+                            Name = reader["patient_name"].ToString(),
+                            Firstname = reader["patient_firstname"].ToString(),
+                            Age = reader.GetInt32("age"),
+                            Gender = reader["gender"].ToString(),
+                            Category = reader["category_name"] == DBNull.Value ? "Aucune" : reader["category_name"].ToString(),
+                            Doctor = $"{reader["doctor_firstname"]} {reader["doctor_name"]}"
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error GetPatientsByDoctorId: " + ex.Message);
+                }
+            }
+
+            return patients;
+        }
+
+        /// <summary>
+        /// Retrieves all patients assigned to a specific doctor (user ID) for populating a combobox.
+        /// </summary>
+        /// <param name="id_user">The unique identifier of the doctor/user.</param>
+        /// <returns>A list of <see cref="Patient"/> objects.</returns>
+        public List<Patient> GetPatientsForComboBoxByDoctorId(int id_user)
+        {
+            List<Patient> patients = new List<Patient>();
+            using (var connection = db.GetConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    string query = @"
+                        SELECT id_patient, id_user, name, firstname, age, gender
+                        FROM Patients
+                        WHERE id_user = @id_user
+                        ORDER BY name, firstname ASC;";
+
+                    using MySqlCommand cmd = new MySqlCommand(query, connection);
+                    cmd.Parameters.AddWithValue("@id_user", id_user);
+                    using var reader = cmd.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        var patient = new Patient(
+                            reader.GetInt32("id_patient"),
+                            reader.GetInt32("id_user"),
+                            reader["name"].ToString(),
+                            reader.GetInt32("age"),
+                            reader["firstname"].ToString(),
+                            reader["gender"].ToString()
+                        );
+                        patients.Add(patient);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error GetPatientsForComboBoxByDoctorId: " + ex.Message);
+                }
+            }
+            return patients;
+        }
     }
 }

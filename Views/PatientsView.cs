@@ -134,7 +134,14 @@ namespace gsbMonolith.Views
         {
             try
             {
-                dgvPatients.DataSource = patientDAO.GetAllPatients();
+                if (currentUser.Role)
+                {
+                    dgvPatients.DataSource = patientDAO.GetAllPatients();
+                }
+                else
+                {
+                    dgvPatients.DataSource = patientDAO.GetPatientsByDoctorId(currentUser.Id);
+                }
                 if(dgvPatients.Columns["Id"] != null) dgvPatients.Columns["Id"].Visible = false;
                 if(dgvPatients.Columns["Id_user"] != null) dgvPatients.Columns["Id_user"].Visible = false;
                 

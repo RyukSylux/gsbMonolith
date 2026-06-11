@@ -277,5 +277,58 @@ namespace gsbMonolith.DAO
                 return false;
             }
         }
+
+        /// <summary>
+        /// Retrieves all prescriptions issued by a specific doctor (user ID) with patient and medicine information.
+        /// </summary>
+        /// <param name="id_user">The unique identifier of the doctor/user.</param>
+        /// <returns>A list of dynamic objects representing prescriptions.</returns>
+        public List<dynamic> GetPrescriptionsByDoctorId(int id_user)
+        {
+            var prescriptions = new List<dynamic>();
+
+            using var connection = db.GetConnection();
+
+            try
+            {
+                connection.Open();
+                string query = @"
+                    SELECT 
+                        p.id_prescription, p.validity,
+                        u.firstname AS doctor_firstname, u.name AS doctor_name,
+                        pa.firstname AS patient_firstname, pa.name AS patient_name, pa.age AS patient_age,
+                        GROUP_CONCAT(CONCAT(m.name, ' (', a.quantity, ')') SEPARATOR ', ') AS medicines
+                    FROM Prescription p
+                    INNER JOIN Users u ON p.id_user = u.id_user
+                    INNER JOIN Patients pa ON p.id_patient = pa.id_patient
+                    LEFT JOIN Appartient a ON p.id_prescription = a.id_prescription
+                    LEFT JOIN Medicine m ON a.id_medicine = m.id_medicine
+                    WHERE p.id_user = @id_user
+                    GROUP BY p.id_prescription
+                    ORDER BY p.id_prescription ASC;";
+
+                using var cmd = new MySqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@id_user", id_user);
+                using var reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    prescriptions.Add(new
+                    {
+                        Id = reader.GetInt32("id_prescription"),
+                        Validité = reader.GetDateTime("validity").ToString("yyyy-MM-dd"),
+                        Docteur = $"{reader["doctor_firstname"]} {reader["doctor_name"]}",
+                        Patient = $"{reader["patient_firstname"]} {reader["patient_name"]} ({reader["patient_age"]} ans)",
+                        Médicaments = reader["medicines"] != DBNull.Value ? reader["medicines"].ToString() : "Aucun"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error GetPrescriptionsByDoctorId: " + ex.Message);
+            }
+
+            return prescriptions;
+        }
     }
 }
