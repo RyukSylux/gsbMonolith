@@ -288,3 +288,92 @@ Conformément au Règlement Général sur la Protection des Données (RGPD) et a
   1. Sur le tableau des patients, repérer la ligne pseudonymisée `Ma*** Dup***`.
   2. Double-cliquer sur cette ligne pour ouvrir le formulaire de modification.
 * **Résultat attendu :** Les champs textuels *Nom* et *Prénom* de la fenêtre d'édition affichent les données en clair (`Dupont` et `Marie`) permettant la lecture et la correction.
+
+---
+
+## 6. Annexe : Catalogue des Requêtes SQL Utiles (tests manuels)
+
+Voici l'ensemble des requêtes SQL exécutées par l'application pour réaliser les 4 missions. Vous pouvez les copier-coller dans votre terminal ou phpMyAdmin en remplaçant les variables (ex: `@id_user`, `@id_patient`, `@id_medicine`) par des valeurs réelles.
+
+### 1. Requêtes relatives aux catégories et contre-indications
+* **Récupérer tous les patients avec leur catégorie (IHM admin) :**
+  ```sql
+  SELECT p.id_patient, p.name AS patient_name, p.firstname AS patient_firstname, p.age, p.gender, 
+         u.firstname AS doctor_firstname, u.name AS doctor_name, c.name AS category_name 
+  FROM Patients p 
+  INNER JOIN Users u ON p.id_user = u.id_user 
+  LEFT JOIN PatientCategory pc ON p.id_patient = pc.id_patient 
+  LEFT JOIN Category c ON pc.id_category = c.id_category 
+  ORDER BY p.id_patient ASC;
+  ```
+* **Récupérer un patient spécifique avec sa catégorie par son ID :**
+  ```sql
+  SELECT p.*, pc.id_category 
+  FROM Patients p 
+  LEFT JOIN PatientCategory pc ON p.id_patient = pc.id_patient 
+  WHERE p.id_patient = 1; -- Remplacer 1 par l'ID voulu
+  ```
+* **Associer un patient à une catégorie :**
+  ```sql
+  INSERT INTO PatientCategory (id_patient, id_category) VALUES (1, 1);
+  ```
+* **Retirer un patient de sa catégorie :**
+  ```sql
+  DELETE FROM PatientCategory WHERE id_patient = 1;
+  ```
+* **Vérifier si un médicament est interdit pour une catégorie donnée (ex: Catégorie 1 et Médicament 2) :**
+  ```sql
+  SELECT COUNT(*) FROM ForbiddenMedicine WHERE id_category = 1 AND id_medicine = 2;
+  ```
+* **Récupérer la liste des catégories exclues pour un médicament (ex: Médicament ID = 2) :**
+  ```sql
+  SELECT id_category FROM ForbiddenMedicine WHERE id_medicine = 2;
+  ```
+* **Ajouter/Supprimer une contre-indication sur un médicament :**
+  ```sql
+  -- Associer contre-indication
+  INSERT INTO ForbiddenMedicine (id_category, id_medicine) VALUES (1, 2);
+  -- Supprimer toutes les contre-indications d'un médicament
+  DELETE FROM ForbiddenMedicine WHERE id_medicine = 2;
+  ```
+
+### 2. Requêtes relatives au cloisonnement par médecin
+* **Récupérer uniquement les patients d'un médecin (ex: Médecin ID = 1) :**
+  ```sql
+  SELECT p.id_patient, p.name AS patient_name, p.firstname AS patient_firstname, p.age, p.gender, 
+         u.firstname AS doctor_firstname, u.name AS doctor_name, c.name AS category_name 
+  FROM Patients p 
+  INNER JOIN Users u ON p.id_user = u.id_user 
+  LEFT JOIN PatientCategory pc ON p.id_patient = pc.id_patient 
+  LEFT JOIN Category c ON pc.id_category = c.id_category 
+  WHERE p.id_user = 1 -- Remplacer 1 par l'ID du médecin
+  ORDER BY p.id_patient ASC;
+  ```
+* **Récupérer uniquement les ordonnances créées par un médecin (ex: Médecin ID = 1) :**
+  ```sql
+  SELECT p.id_prescription, p.validity, 
+         u.firstname AS doctor_firstname, u.name AS doctor_name, 
+         pa.firstname AS patient_firstname, pa.name AS patient_name, pa.age AS patient_age, 
+         GROUP_CONCAT(CONCAT(m.name, ' (', a.quantity, ')') SEPARATOR ', ') AS medicines 
+  FROM Prescription p 
+  INNER JOIN Users u ON p.id_user = u.id_user 
+  INNER JOIN Patients pa ON p.id_patient = pa.id_patient 
+  LEFT JOIN Appartient a ON p.id_prescription = a.id_prescription 
+  LEFT JOIN Medicine m ON a.id_medicine = m.id_medicine 
+  WHERE p.id_user = 1 -- Remplacer 1 par l'ID du médecin
+  GROUP BY p.id_prescription 
+  ORDER BY p.id_prescription ASC;
+  ```
+* **Charger les patients dans le sélecteur d'ordonnance pour un médecin spécifique (ex: ID = 1) :**
+  ```sql
+  SELECT id_patient, id_user, name, firstname, age, gender 
+  FROM Patients 
+  WHERE id_user = 1 
+  ORDER BY name, firstname ASC;
+  ```
+
+### 3. Requêtes de sécurisation de suppression
+* **Vérifier si un patient a des prescriptions avant sa suppression (ex: Patient ID = 1) :**
+  ```sql
+  SELECT COUNT(*) FROM Prescription WHERE id_patient = 1;
+  ```
