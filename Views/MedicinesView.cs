@@ -169,6 +169,7 @@ namespace gsbMonolith.Views
                             Dosage = modal.MedDosage,
                             Description = modal.MedDescription
                         };
+                        med.ForbiddenCategoryIds = modal.ForbiddenCategoryIds;
 
                         if (medicine != null)
                         {

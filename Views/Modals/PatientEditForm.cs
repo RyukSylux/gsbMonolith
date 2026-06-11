@@ -31,7 +31,13 @@ namespace gsbMonolith.Views.Modals
         /// </summary>
         public string PatientGender => txtGender.Text;
 
+        /// <summary>
+        /// Gets the selected category ID, or null if "Aucune" is selected.
+        /// </summary>
+        public int? SelectedCategoryId => (cmbCategory.SelectedValue as int?) == 0 ? null : (cmbCategory.SelectedValue as int?);
+
         private TextBox txtName, txtFirstname, txtAge, txtGender;
+        private ComboBox cmbCategory;
         private Button btnSave, btnCancel;
         private Patient _patient;
 
@@ -43,6 +49,7 @@ namespace gsbMonolith.Views.Modals
         {
             _patient = patient;
             SetupUI();
+            LoadCategories();
             if (_patient != null)
             {
                 this.Text = "Modifier Patient";
@@ -50,18 +57,43 @@ namespace gsbMonolith.Views.Modals
                 txtFirstname.Text = _patient.Firstname;
                 txtAge.Text = _patient.Age.ToString();
                 txtGender.Text = _patient.Gender;
+                if (_patient.Id_category.HasValue)
+                    cmbCategory.SelectedValue = _patient.Id_category.Value;
+                else
+                    cmbCategory.SelectedValue = 0;
                 btnSave.Text = "Enregistrer";
             }
             else
             {
                 this.Text = "Nouveau Patient";
+                cmbCategory.SelectedValue = 0;
                 btnSave.Text = "Créer";
+            }
+        }
+
+        private void LoadCategories()
+        {
+            try
+            {
+                var catDAO = new gsbMonolith.DAO.CategoryDAO();
+                var categories = catDAO.GetAllCategories();
+                var list = new System.Collections.Generic.List<Category>();
+                list.Add(new Category(0, "Aucune"));
+                list.AddRange(categories);
+
+                cmbCategory.DataSource = list;
+                cmbCategory.DisplayMember = "Name";
+                cmbCategory.ValueMember = "Id_category";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors du chargement des catégories: " + ex.Message);
             }
         }
 
         private void SetupUI()
         {
-            this.Size = new Size(400, 450);
+            this.Size = new Size(400, 520);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -83,10 +115,14 @@ namespace gsbMonolith.Views.Modals
             txtAge = CreateInput("Âge", 200);
             txtGender = CreateInput("Genre (M/F)", 260);
 
-            btnSave = new Button { Text = "Enregistrer", BackColor = Color.FromArgb(40, 167, 69), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(20, 330), Size = new Size(160, 40), Cursor = Cursors.Hand };
+            Label lblCategory = new Label { Text = "Catégorie de patient", Location = new Point(20, 300), AutoSize = true, ForeColor = Color.Gray, Font = new Font("Segoe UI", 9F) };
+            cmbCategory = new ComboBox { Location = new Point(20, 320), Width = 340, Font = new Font("Segoe UI", 10F), DropDownStyle = ComboBoxStyle.DropDownList };
+            this.Controls.AddRange(new Control[] { lblCategory, cmbCategory });
+
+            btnSave = new Button { Text = "Enregistrer", BackColor = Color.FromArgb(40, 167, 69), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(20, 390), Size = new Size(160, 40), Cursor = Cursors.Hand };
             btnSave.Click += BtnSave_Click;
 
-            btnCancel = new Button { Text = "Annuler", BackColor = Color.Gray, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(200, 330), Size = new Size(160, 40), Cursor = Cursors.Hand };
+            btnCancel = new Button { Text = "Annuler", BackColor = Color.Gray, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(200, 390), Size = new Size(160, 40), Cursor = Cursors.Hand };
             btnCancel.DialogResult = DialogResult.Cancel;
 
             this.Controls.AddRange(new Control[] { btnSave, btnCancel });

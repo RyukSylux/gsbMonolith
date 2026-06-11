@@ -31,7 +31,27 @@ namespace gsbMonolith.Views.Modals
         /// </summary>
         public string MedDescription => txtDescription.Text;
 
+        /// <summary>
+        /// Gets the list of category IDs for which this medicine is forbidden.
+        /// </summary>
+        public System.Collections.Generic.List<int> ForbiddenCategoryIds
+        {
+            get
+            {
+                var list = new System.Collections.Generic.List<int>();
+                foreach (var item in clbForbiddenCategories.CheckedItems)
+                {
+                    if (item is Category c)
+                    {
+                        list.Add(c.Id_category);
+                    }
+                }
+                return list;
+            }
+        }
+
         private TextBox txtName, txtMolecule, txtDosage, txtDescription;
+        private CheckedListBox clbForbiddenCategories;
         private Button btnSave, btnCancel;
         private Medicine _medicine;
 
@@ -43,6 +63,7 @@ namespace gsbMonolith.Views.Modals
         {
             _medicine = medicine;
             SetupUI();
+            LoadCategories();
             if (_medicine != null)
             {
                 this.Text = "Modifier Médicament";
@@ -59,9 +80,40 @@ namespace gsbMonolith.Views.Modals
             }
         }
 
+        private void LoadCategories()
+        {
+            try
+            {
+                var catDAO = new gsbMonolith.DAO.CategoryDAO();
+                var categories = catDAO.GetAllCategories();
+                
+                clbForbiddenCategories.Items.Clear();
+                foreach (var cat in categories)
+                {
+                    clbForbiddenCategories.Items.Add(cat);
+                }
+
+                if (_medicine != null && _medicine.ForbiddenCategoryIds != null)
+                {
+                    for (int i = 0; i < clbForbiddenCategories.Items.Count; i++)
+                    {
+                        var item = clbForbiddenCategories.Items[i] as Category;
+                        if (item != null && _medicine.ForbiddenCategoryIds.Contains(item.Id_category))
+                        {
+                            clbForbiddenCategories.SetItemChecked(i, true);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors du chargement des catégories : " + ex.Message);
+            }
+        }
+
         private void SetupUI()
         {
-            this.Size = new Size(400, 500);
+            this.Size = new Size(400, 680);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -83,10 +135,22 @@ namespace gsbMonolith.Views.Modals
             txtDosage = CreateInput("Dosage", 200);
             txtDescription = CreateInput("Description", 260);
 
-            btnSave = new Button { Text = "Enregistrer", BackColor = Color.FromArgb(40, 167, 69), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(20, 360), Size = new Size(160, 40), Cursor = Cursors.Hand };
+            Label lblForbidden = new Label { Text = "Contre-indiqué pour les catégories", Location = new Point(20, 320), AutoSize = true, ForeColor = Color.Gray, Font = new Font("Segoe UI", 9F) };
+            clbForbiddenCategories = new CheckedListBox 
+            { 
+                Location = new Point(20, 340), 
+                Width = 340, 
+                Height = 150, 
+                BorderStyle = BorderStyle.FixedSingle,
+                Font = new Font("Segoe UI", 10F),
+                CheckOnClick = true
+            };
+            this.Controls.AddRange(new Control[] { lblForbidden, clbForbiddenCategories });
+
+            btnSave = new Button { Text = "Enregistrer", BackColor = Color.FromArgb(40, 167, 69), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(20, 520), Size = new Size(160, 40), Cursor = Cursors.Hand };
             btnSave.Click += BtnSave_Click;
 
-            btnCancel = new Button { Text = "Annuler", BackColor = Color.Gray, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(200, 360), Size = new Size(160, 40), Cursor = Cursors.Hand };
+            btnCancel = new Button { Text = "Annuler", BackColor = Color.Gray, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(200, 520), Size = new Size(160, 40), Cursor = Cursors.Hand };
             btnCancel.DialogResult = DialogResult.Cancel;
 
             this.Controls.AddRange(new Control[] { btnSave, btnCancel });

@@ -162,6 +162,23 @@ namespace gsbMonolith.DAO
 
                         med.Description = (med.Description ?? "");
                     }
+                    myReader.Close();
+
+                    if (med != null)
+                    {
+                        string subQuery = "SELECT id_category FROM ForbiddenMedicine WHERE id_medicine = @id;";
+                        using (var subCmd = new MySqlCommand(subQuery, connection))
+                        {
+                            subCmd.Parameters.AddWithValue("@id", id);
+                            using (var subReader = subCmd.ExecuteReader())
+                            {
+                                while (subReader.Read())
+                                {
+                                    med.ForbiddenCategoryIds.Add(subReader.GetInt32("id_category"));
+                                }
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -188,6 +205,7 @@ namespace gsbMonolith.DAO
                     MySqlCommand myCommand = new MySqlCommand(@"
                         INSERT INTO Medicine (id_user, dosage, name, description, molecule)
                         VALUES (@id_user, @dosage, @name, @description, @molecule);
+                        SELECT LAST_INSERT_ID();
                     ", connection);
 
                     myCommand.Parameters.AddWithValue("@id_user", med.Id_user);
@@ -196,10 +214,24 @@ namespace gsbMonolith.DAO
                     myCommand.Parameters.AddWithValue("@description", med.Description);
                     myCommand.Parameters.AddWithValue("@molecule", med.Molecule);
 
-                    int rows = myCommand.ExecuteNonQuery();
-                    connection.Close();
+                    int medId = Convert.ToInt32(myCommand.ExecuteScalar());
+                    med.Id_medicine = medId;
 
-                    return rows > 0;
+                    if (medId > 0 && med.ForbiddenCategoryIds != null && med.ForbiddenCategoryIds.Count > 0)
+                    {
+                        foreach (var catId in med.ForbiddenCategoryIds)
+                        {
+                            string linkQuery = "INSERT INTO ForbiddenMedicine (id_category, id_medicine) VALUES (@id_category, @id_medicine);";
+                            using (var linkCmd = new MySqlCommand(linkQuery, connection))
+                            {
+                                linkCmd.Parameters.AddWithValue("@id_category", catId);
+                                linkCmd.Parameters.AddWithValue("@id_medicine", medId);
+                                linkCmd.ExecuteNonQuery();
+                            }
+                        }
+                    }
+
+                    return medId > 0;
                 }
                 catch (Exception ex)
                 {
@@ -240,8 +272,29 @@ namespace gsbMonolith.DAO
                     myCommand.Parameters.AddWithValue("@molecule", med.Molecule);
 
                     int rows = myCommand.ExecuteNonQuery();
-                    connection.Close();
 
+                    string delQuery = "DELETE FROM ForbiddenMedicine WHERE id_medicine = @id_medicine;";
+                    using (var delCmd = new MySqlCommand(delQuery, connection))
+                    {
+                        delCmd.Parameters.AddWithValue("@id_medicine", med.Id_medicine);
+                        delCmd.ExecuteNonQuery();
+                    }
+
+                    if (med.ForbiddenCategoryIds != null && med.ForbiddenCategoryIds.Count > 0)
+                    {
+                        foreach (var catId in med.ForbiddenCategoryIds)
+                        {
+                            string linkQuery = "INSERT INTO ForbiddenMedicine (id_category, id_medicine) VALUES (@id_category, @id_medicine);";
+                            using (var linkCmd = new MySqlCommand(linkQuery, connection))
+                            {
+                                linkCmd.Parameters.AddWithValue("@id_category", catId);
+                                linkCmd.Parameters.AddWithValue("@id_medicine", med.Id_medicine);
+                                linkCmd.ExecuteNonQuery();
+                            }
+                        }
+                    }
+
+                    connection.Close();
                     return rows > 0;
                 }
                 catch (Exception ex)

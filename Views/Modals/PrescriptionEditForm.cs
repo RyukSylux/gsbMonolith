@@ -182,6 +182,28 @@ namespace gsbMonolith.Views.Modals
             string name = medObj?.Name ?? "Inconnu";
             int qty = (int)numQuantity.Value;
 
+            // Safety check against patient's category
+            if (cmbPatients.SelectedValue != null)
+            {
+                int patientId = (int)cmbPatients.SelectedValue;
+                var patient = patientDAO.GetPatientById(patientId);
+                if (patient != null && patient.Id_category.HasValue)
+                {
+                    var catDAO = new gsbMonolith.DAO.CategoryDAO();
+                    if (catDAO.IsMedicineForbidden(patient.Id_category.Value, id))
+                    {
+                        string catName = catDAO.GetCategoryName(patient.Id_category.Value);
+                        MessageBox.Show(
+                            $"Le médicament '{name}' est interdit / contre-indiqué pour la catégorie '{catName}' de ce patient !",
+                            "Contre-indication détectée",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                        return;
+                    }
+                }
+            }
+
             var existing = _currentMeds.FirstOrDefault(m => m.Id == id);
             if(existing != null) existing.Quantity += qty;
             else _currentMeds.Add(new MedicineSelection { Id = id, Name = name, Quantity = qty });
@@ -192,6 +214,29 @@ namespace gsbMonolith.Views.Modals
         {
             if (cmbPatients.SelectedValue == null) { MessageBox.Show("Sélectionnez un patient."); return; }
             if (_currentMeds.Count == 0) { MessageBox.Show("Ajoutez au moins un médicament."); return; }
+
+            // Final safety validation check
+            int patientId = (int)cmbPatients.SelectedValue;
+            var patient = patientDAO.GetPatientById(patientId);
+            if (patient != null && patient.Id_category.HasValue)
+            {
+                var catDAO = new gsbMonolith.DAO.CategoryDAO();
+                foreach (var med in _currentMeds)
+                {
+                    if (catDAO.IsMedicineForbidden(patient.Id_category.Value, med.Id))
+                    {
+                        string catName = catDAO.GetCategoryName(patient.Id_category.Value);
+                        MessageBox.Show(
+                            $"Le médicament '{med.Name}' est interdit / contre-indiqué pour la catégorie '{catName}' de ce patient !",
+                            "Contre-indication détectée",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                        return;
+                    }
+                }
+            }
+
             this.DialogResult = DialogResult.OK;
             this.Close();
         }

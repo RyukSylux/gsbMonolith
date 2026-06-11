@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace gsbMonolith.Models
 {
@@ -43,6 +43,16 @@ namespace gsbMonolith.Models
         /// Gets or sets the gender of the patient.
         /// </summary>
         public string Gender { get; set; }
+
+        /// <summary>
+        /// Gets or sets the associated category ID.
+        /// </summary>
+        public int? Id_category { get; set; }
+
+        /// <summary>
+        /// Gets or sets the associated category name.
+        /// </summary>
+        public string? CategoryName { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Patient"/> class.

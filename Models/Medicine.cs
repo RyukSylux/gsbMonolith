@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace gsbMonolith.Models
 {
@@ -37,6 +37,11 @@ namespace gsbMonolith.Models
         /// Gets or sets the active molecule contained in the medicine.
         /// </summary>
         public string Molecule { get; set; }
+
+        /// <summary>
+        /// Gets or sets the category IDs for which this medicine is forbidden.
+        /// </summary>
+        public System.Collections.Generic.List<int> ForbiddenCategoryIds { get; set; } = new System.Collections.Generic.List<int>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Medicine"/> class.

@@ -300,8 +300,77 @@ ALTER TABLE `Patients`
 ALTER TABLE `Prescription`
   ADD CONSTRAINT `Prescription_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `Users` (`id_user`) ON DELETE CASCADE,
   ADD CONSTRAINT `Prescription_ibfk_2` FOREIGN KEY (`id_patient`) REFERENCES `Patients` (`id_patient`) ON DELETE CASCADE;
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `Category`
+--
+
+CREATE TABLE `Category` (
+  `id_category` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  PRIMARY KEY (`id_category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Déchargement des données de la table `Category`
+--
+
+INSERT INTO `Category` (`id_category`, `name`) VALUES
+(1, 'Femme enceinte'),
+(2, 'Enfant'),
+(3, 'Personne âgée'),
+(4, 'Diabétique');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `PatientCategory`
+--
+
+CREATE TABLE `PatientCategory` (
+  `id_patient` int NOT NULL,
+  `id_category` int NOT NULL,
+  PRIMARY KEY (`id_patient`),
+  CONSTRAINT `fk_pc_patient` FOREIGN KEY (`id_patient`) REFERENCES `Patients` (`id_patient`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pc_category` FOREIGN KEY (`id_category`) REFERENCES `Category` (`id_category`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Déchargement des données de la table `PatientCategory`
+--
+
+INSERT INTO `PatientCategory` (`id_patient`, `id_category`) VALUES
+(1, 1),
+(13, 2),
+(5, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `ForbiddenMedicine`
+--
+
+CREATE TABLE `ForbiddenMedicine` (
+  `id_category` int NOT NULL,
+  `id_medicine` int NOT NULL,
+  PRIMARY KEY (`id_category`, `id_medicine`),
+  CONSTRAINT `fk_fm_category` FOREIGN KEY (`id_category`) REFERENCES `Category` (`id_category`) ON DELETE CASCADE,
+  CONSTRAINT `fk_fm_medicine` FOREIGN KEY (`id_medicine`) REFERENCES `Medicine` (`id_medicine`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Déchargement des données de la table `ForbiddenMedicine`
+--
+
+INSERT INTO `ForbiddenMedicine` (`id_category`, `id_medicine`) VALUES
+(1, 2),
+(2, 5),
+(2, 6);
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+

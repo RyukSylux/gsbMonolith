@@ -25,7 +25,11 @@ namespace gsbMonolith.DAO
                 try
                 {
                     connection.Open();
-                    string query = "SELECT * FROM Patients WHERE id_patient = @id_patient;";
+                    string query = @"
+                        SELECT p.*, pc.id_category 
+                        FROM Patients p 
+                        LEFT JOIN PatientCategory pc ON p.id_patient = pc.id_patient 
+                        WHERE p.id_patient = @id_patient;";
                     MySqlCommand cmd = new MySqlCommand(query, connection);
                     cmd.Parameters.AddWithValue("@id_patient", id_patient);
 
@@ -33,7 +37,7 @@ namespace gsbMonolith.DAO
                     {
                         if (reader.Read())
                         {
-                            return new Patient(
+                            var patient = new Patient(
                                 reader.GetInt32("id_patient"),
                                 reader.GetInt32("id_user"),
                                 reader.GetString("name"),
@@ -41,6 +45,11 @@ namespace gsbMonolith.DAO
                                 reader.GetString("firstname"),
                                 reader.GetString("gender")
                             );
+                            if (!reader.IsDBNull(reader.GetOrdinal("id_category")))
+                            {
+                                patient.Id_category = reader.GetInt32("id_category");
+                            }
+                            return patient;
                         }
                     }
                 }
@@ -66,7 +75,8 @@ namespace gsbMonolith.DAO
                     connection.Open();
                     string query = @"
                         INSERT INTO Patients (id_user, name, firstname, age, gender)
-                        VALUES (@id_user, @name, @firstname, @age, @gender);";
+                        VALUES (@id_user, @name, @firstname, @age, @gender);
+                        SELECT LAST_INSERT_ID();";
 
                     using MySqlCommand cmd = new MySqlCommand(query, connection);
                     cmd.Parameters.AddWithValue("@id_user", patient.Id_user);
@@ -75,8 +85,18 @@ namespace gsbMonolith.DAO
                     cmd.Parameters.AddWithValue("@age", patient.Age);
                     cmd.Parameters.AddWithValue("@gender", patient.Gender);
 
-                    int rows = cmd.ExecuteNonQuery();
-                    return rows > 0;
+                    int patientId = Convert.ToInt32(cmd.ExecuteScalar());
+                    patient.Id_patient = patientId;
+
+                    if (patient.Id_category.HasValue)
+                    {
+                        string linkQuery = "INSERT INTO PatientCategory (id_patient, id_category) VALUES (@id_patient, @id_category);";
+                        using MySqlCommand linkCmd = new MySqlCommand(linkQuery, connection);
+                        linkCmd.Parameters.AddWithValue("@id_patient", patientId);
+                        linkCmd.Parameters.AddWithValue("@id_category", patient.Id_category.Value);
+                        linkCmd.ExecuteNonQuery();
+                    }
+                    return patientId > 0;
                 }
                 catch (Exception ex)
                 {
@@ -109,9 +129,12 @@ namespace gsbMonolith.DAO
                             p.age,
                             p.gender,
                             u.firstname AS doctor_firstname,
-                            u.name AS doctor_name
+                            u.name AS doctor_name,
+                            c.name AS category_name
                         FROM Patients p
                         INNER JOIN Users u ON p.id_user = u.id_user
+                        LEFT JOIN PatientCategory pc ON p.id_patient = pc.id_patient
+                        LEFT JOIN Category c ON pc.id_category = c.id_category
                         ORDER BY p.id_patient ASC;";
 
                     using MySqlCommand cmd = new MySqlCommand(query, connection);
@@ -126,6 +149,7 @@ namespace gsbMonolith.DAO
                             Firstname = reader["patient_firstname"].ToString(),
                             Age = reader.GetInt32("age"),
                             Gender = reader["gender"].ToString(),
+                            Category = reader["category_name"] == DBNull.Value ? "Aucune" : reader["category_name"].ToString(),
                             Doctor = $"{reader["doctor_firstname"]} {reader["doctor_name"]}"
                         });
                     }
@@ -237,6 +261,26 @@ namespace gsbMonolith.DAO
                     cmd.Parameters.AddWithValue("@id_patient", patient.Id_patient);
 
                     int rowsAffected = cmd.ExecuteNonQuery();
+
+                    // Update category association
+                    string deleteLinkQuery = "DELETE FROM PatientCategory WHERE id_patient = @id_patient;";
+                    using (MySqlCommand delCmd = new MySqlCommand(deleteLinkQuery, connection))
+                    {
+                        delCmd.Parameters.AddWithValue("@id_patient", patient.Id_patient);
+                        delCmd.ExecuteNonQuery();
+                    }
+
+                    if (patient.Id_category.HasValue)
+                    {
+                        string insertLinkQuery = "INSERT INTO PatientCategory (id_patient, id_category) VALUES (@id_patient, @id_category);";
+                        using (MySqlCommand insCmd = new MySqlCommand(insertLinkQuery, connection))
+                        {
+                            insCmd.Parameters.AddWithValue("@id_patient", patient.Id_patient);
+                            insCmd.Parameters.AddWithValue("@id_category", patient.Id_category.Value);
+                            insCmd.ExecuteNonQuery();
+                        }
+                    }
+
                     connection.Close();
                     return rowsAffected > 0;
                 }

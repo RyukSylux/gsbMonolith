@@ -142,6 +142,7 @@ namespace gsbMonolith.Views
                 if (dgvPatients.Columns["Firstname"] != null) dgvPatients.Columns["Firstname"].HeaderText = "Prénom";
                 if (dgvPatients.Columns["Age"] != null) dgvPatients.Columns["Age"].HeaderText = "Âge";
                 if (dgvPatients.Columns["Gender"] != null) dgvPatients.Columns["Gender"].HeaderText = "Genre";
+                if (dgvPatients.Columns["Category"] != null) dgvPatients.Columns["Category"].HeaderText = "Catégorie";
                 if (dgvPatients.Columns["Doctor"] != null) dgvPatients.Columns["Doctor"].HeaderText = "Médecin";
             }
             catch(Exception ex) { MessageBox.Show("Erreur: " + ex.Message); }
@@ -163,6 +164,7 @@ namespace gsbMonolith.Views
                             modal.PatientFirstName, 
                             modal.PatientGender
                         );
+                        p.Id_category = modal.SelectedCategoryId;
 
                         if (patient != null)
                             patientDAO.UpdatePatient(p);
