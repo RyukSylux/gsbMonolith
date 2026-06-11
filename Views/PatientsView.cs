@@ -192,9 +192,26 @@ namespace gsbMonolith.Views
         {
              if(dgvPatients.SelectedRows.Count == 0) return;
              
+             int id = (int)dgvPatients.SelectedRows[0].Cells["Id"].Value;
+
+             // Restriction : Si l'utilisateur connecté est médecin (non-admin)
+             if (!currentUser.Role)
+             {
+                 var prescriptionDAO = new PrescriptionDAO();
+                 if (prescriptionDAO.HasPrescriptions(id))
+                 {
+                     MessageBox.Show(
+                         "Impossible de supprimer ce patient car des prescriptions lui ont été attribuées.",
+                         "Suppression impossible",
+                         MessageBoxButtons.OK,
+                         MessageBoxIcon.Warning
+                     );
+                     return;
+                 }
+             }
+
              if(MessageBox.Show("Supprimer ce patient ?", "Confirmer", MessageBoxButtons.YesNo) == DialogResult.Yes)
              {
-                 int id = (int)dgvPatients.SelectedRows[0].Cells["Id"].Value;
                  patientDAO.DeletePatient(id);
                  LoadPatients();
              }

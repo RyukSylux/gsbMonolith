@@ -110,29 +110,44 @@ Afin de respecter scrupuleusement les consignes pédagogiques du BTS, **les mét
 Nous avons implémenté de nouvelles méthodes dédiées dans la couche DAO pour exécuter le filtrage directement au niveau de la base de données, évitant ainsi le chargement inutile de données en mémoire.
 
 ### Nouveaux Composants de la couche DAO
-
 Dans **[PatientDAO.cs](file:///c:/Users/sylux/Documents/git/gsbMonolith/DAO/PatientDAO.cs)** :
-1. `GetPatientsByDoctorId(int id_user)` : Retourne la liste des patients attribués à un médecin spécifique (utilisé pour remplir la grille principale).
-2. `GetPatientsForComboBoxByDoctorId(int id_user)` : Retourne une liste de modèles réduits pour remplir le menu déroulant lors de la création d'ordonnances.
+1. `GetPatientsByDoctorId(int id_user)` : Retourne la liste des patients attribués à un médecin spécifique.
+2. `GetPatientsForComboBoxByDoctorId(int id_user)` : Retourne une liste filtrée pour le menu déroulant lors de la création d'ordonnances.
 
 Dans **[PrescriptionDAO.cs](file:///c:/Users/sylux/Documents/git/gsbMonolith/DAO/PrescriptionDAO.cs)** :
 1. `GetPrescriptionsByDoctorId(int id_user)` : Retourne uniquement les ordonnances créées par le médecin connecté.
 
 ### Intégration dans les Vues
-Dans les différentes fenêtres de l'interface graphique (`PatientsView.cs`, `PrescriptionsView.cs` et `PrescriptionEditForm.cs`), un contrôle sur le rôle de l'utilisateur connecté est effectué :
 - Si l'utilisateur est un **Administrateur** (`currentUser.Role == true`) : Utilisation des méthodes globales `GetAll` pour voir tout le parc de la clinique.
 - Si l'utilisateur est un **Médecin** (`currentUser.Role == false`) : Utilisation systématique des méthodes filtrées par identifiant médecin (`currentUser.Id`).
 
 ---
 
-## 3. Cahier de Recette (Scénarios de Validation)
+## 3. Feature 3 : Sécurisation de la Suppression des Patients
+
+### Spécification du besoin
+La suppression d'un patient disposant d'un historique médical (prescriptions passées) est une opération critique. Pour éviter des pertes de traçabilité accidentelles, nous devons interdire cette opération aux médecins.
+
+### Logique appliquée
+- Si l'utilisateur connecté est un **Médecin** (`Role == false`) :
+  - Si le patient a au moins une prescription existante : **La suppression est bloquée** et un message d'erreur est affiché.
+  - Si le patient n'a aucune prescription : **La suppression est autorisée**.
+- Si l'utilisateur connecté est un **Administrateur** (`Role == true`) :
+  - Il conserve le droit de supprimer n'importe quel patient (la suppression s'exécute alors en cascade).
+
+### Composants implémentés
+- **DAO :** Ajout de la méthode `HasPrescriptions(int id_patient)` dans `PrescriptionDAO.cs` qui effectue un comptage rapide (`SELECT COUNT(*)`) en base de données.
+- **IHM :** Modification de `BtnDelete_Click` dans `PatientsView.cs` pour intercepter l'opération de suppression et appliquer le contrôle.
+
+---
+
+## 4. Cahier de Recette (Scénarios de Validation)
 
 ### Scénario de Test 1 : Assigner une catégorie à un patient
 * **Objectif :** Affecter un patient à une catégorie et persister en base.
 * **Actions IHM :**
-  1. Aller sur l'onglet **Gestion des Patients**.
-  2. Double-cliquer sur le patient *Dupont Marie*.
-  3. Sélectionner "Femme enceinte" dans *Catégorie de patient* et enregistrer.
+  1. Aller sur l'onglet **Gestion des Patients** et éditer le patient *Dupont Marie*.
+  2. Sélectionner "Femme enceinte" dans *Catégorie de patient* et enregistrer.
 * **Résultat attendu :** La colonne **Catégorie** affiche "Femme enceinte" dans le tableau.
 * **Vérification SQL :**
   ```sql
@@ -146,9 +161,8 @@ Dans les différentes fenêtres de l'interface graphique (`PatientsView.cs`, `Pr
 ### Scénario de Test 2 : Définir un médicament interdit pour une catégorie
 * **Objectif :** Bannir un médicament pour une certaine population de patients.
 * **Actions IHM :**
-  1. Aller sur l'onglet **Gestion des Médicaments**.
-  2. Éditer le médicament *Ibuprofène*.
-  3. Cocher "Femme enceinte" dans les contre-indications et enregistrer.
+  1. Aller sur l'onglet **Gestion des Médicaments** et éditer *Ibuprofène*.
+  2. Cocher "Femme enceinte" dans les contre-indications et enregistrer.
 * **Vérification SQL :**
   ```sql
   SELECT m.name AS medicament, c.name AS categorie_interdite
@@ -170,36 +184,78 @@ Dans les différentes fenêtres de l'interface graphique (`PatientsView.cs`, `Pr
 ### Scénario de Test 4 : Cloisonnement médecin (Accès restreint)
 * **Objectif :** S'assurer qu'un médecin ne voit que ses propres dossiers.
 * **Actions :**
-  1. Se connecter avec l'identifiant médecin `alice.martin@clinic.fr` (ID = 1).
-  2. Cliquer sur l'onglet **Gestion des Patients**.
-* **Résultat attendu :** Seuls les patients associés à Alice Martin (comme Marie Dupont) apparaissent. Les patients des autres médecins sont invisibles.
+  1. Se connecter avec le compte de médecin d'Alice Martin (ID = 1).
+  2. Aller sur l'onglet **Gestion des Patients**.
+* **Résultat attendu :** Seuls les patients associés à son compte s'affichent.
 * **Vérification SQL :**
   ```sql
   SELECT id_patient, name, firstname, id_user FROM Patients WHERE id_user = 1;
   ```
-  *(Le résultat doit être identique en nombre et en données aux lignes affichées dans l'application)*
 
 ### Scénario de Test 5 : Accès administrateur (Vue globale)
 * **Objectif :** S'assurer que l'administrateur conserve un accès total.
 * **Actions :**
-  1. Se connecter avec l'identifiant administrateur `sarah.lemoine@admin.fr` (ID = 5).
+  1. Se connecter avec le compte d'administrateur de Sarah Lemoine (ID = 5).
   2. Cliquer sur l'onglet **Gestion des Patients**.
-* **Résultat attendu :** Tous les patients de la clinique, peu importe le médecin affecté, s'affichent.
+* **Résultat attendu :** Tous les patients de la clinique s'affichent.
 * **Vérification SQL :**
   ```sql
   SELECT COUNT(*) FROM Patients;
   ```
-  *(Le nombre total renvoyé par cette requête SQL doit correspondre exactement au nombre de lignes visibles par l'administrateur dans l'IHM)*
 
 ### Scénario de Test 6 : Filtrage dans la création d'ordonnance
 * **Objectif :** Restreindre le choix des patients lors de la rédaction d'une ordonnance.
 * **Actions :**
   1. Se connecter avec le compte d'Alice Martin (ID = 1).
-  2. Aller sur **Prescriptions** et cliquer sur **Nouvelle Prescription**.
-  3. Dérouler la liste de sélection *Patient*.
-* **Résultat attendu :** Seuls les patients dont Alice Martin est le médecin traitant sont sélectionnables dans la liste déroulante.
+  2. Aller sur **Prescriptions** -> **Nouvelle Prescription** -> Dérouler la liste *Patient*.
+* **Résultat attendu :** Seuls les patients d'Alice Martin sont sélectionnables.
 * **Vérification SQL :**
   ```sql
   SELECT id_patient, firstname, name FROM Patients WHERE id_user = 1 ORDER BY name, firstname ASC;
   ```
-  *(La liste déroulante doit comporter exactement cette liste de noms).*
+
+### Scénario de Test 7 : Blocage de suppression (Médecin connecté)
+* **Objectif :** Vérifier qu'un médecin ne peut pas effacer un patient ayant un dossier de prescriptions.
+* **Actions :**
+  1. Se connecter avec le compte de médecin d'Alice Martin (ID = 1).
+  2. Aller dans la **Gestion des Patients**.
+  3. Sélectionner le patient *Dupont Marie* (qui dispose déjà de prescriptions en base).
+  4. Cliquer sur **Supprimer**.
+* **Résultat attendu :** Une boîte de dialogue d'avertissement s'affiche :
+  > *« Impossible de supprimer ce patient car des prescriptions lui ont été attribuées. »*
+  - Le patient n'est pas supprimé de l'IHM.
+* **Vérification SQL de sécurité :**
+  ```sql
+  SELECT COUNT(*) FROM Patients WHERE name = 'Dupont' AND firstname = 'Marie';
+  ```
+  *(Résultat attendu : 1. Prouve que le patient est toujours présent).*
+
+### Scénario de Test 8 : Suppression d'un patient sans prescription (Médecin connecté)
+* **Objectif :** Autoriser la suppression si aucun historique médical n'est menacé.
+* **Actions :**
+  1. Se connecter avec le compte d'Alice Martin (ID = 1).
+  2. Cliquer sur **Nouveau Patient**, créer un patient factice (ex: *Test Suppression*, âge: 20, genre: M) sans lui prescrire aucun médicament.
+  3. Sélectionner ce nouveau patient factice dans la liste et cliquer sur **Supprimer**.
+  4. Confirmer la suppression.
+* **Résultat attendu :** La suppression réussit sans avertissement de blocage. Le patient disparaît de l'écran.
+* **Vérification SQL :**
+  ```sql
+  SELECT COUNT(*) FROM Patients WHERE name = 'Test Suppression';
+  ```
+  *(Résultat attendu : 0).*
+
+### Scénario de Test 9 : Suppression d'un patient par l'administrateur (Accès total)
+* **Objectif :** Valider le comportement de suppression globale d'administration.
+* **Actions :**
+  1. Se connecter avec le compte d'administrateur de Sarah Lemoine (ID = 5).
+  2. Aller dans la **Gestion des Patients**.
+  3. Sélectionner le patient *Bernard Luc* (qui possède des ordonnances).
+  4. Cliquer sur **Supprimer** et confirmer.
+* **Résultat attendu :** Le patient est supprimé sans blocage de prescription.
+* **Vérification SQL de la suppression en cascade :**
+  ```sql
+  -- Vérifier que le patient est supprimé
+  SELECT COUNT(*) FROM Patients WHERE id_patient = 2; -- Doit renvoyer 0
+  -- Vérifier que ses ordonnances associées ont été automatiquement purgées
+  SELECT COUNT(*) FROM Prescription WHERE id_patient = 2; -- Doit renvoyer 0
+  ```

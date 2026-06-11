@@ -330,5 +330,33 @@ namespace gsbMonolith.DAO
 
             return prescriptions;
         }
+
+        /// <summary>
+        /// Checks if a patient has any associated prescriptions.
+        /// </summary>
+        /// <param name="id_patient">The patient identifier.</param>
+        /// <returns>True if the patient has prescriptions; otherwise, false.</returns>
+        public bool HasPrescriptions(int id_patient)
+        {
+            using (var connection = db.GetConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    string query = "SELECT COUNT(*) FROM Prescription WHERE id_patient = @id_patient;";
+                    using (var cmd = new MySqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@id_patient", id_patient);
+                        long count = Convert.ToInt64(cmd.ExecuteScalar());
+                        return count > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error HasPrescriptions: {ex.Message}");
+                    return false;
+                }
+            }
+        }
     }
 }
