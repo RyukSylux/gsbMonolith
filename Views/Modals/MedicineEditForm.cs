@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using gsbMonolith.Models;
@@ -34,11 +35,11 @@ namespace gsbMonolith.Views.Modals
         /// <summary>
         /// Gets the list of category IDs for which this medicine is forbidden.
         /// </summary>
-        public System.Collections.Generic.List<int> ForbiddenCategoryIds
+        public List<int> ForbiddenCategoryIds
         {
             get
             {
-                var list = new System.Collections.Generic.List<int>();
+                var list = new List<int>();
                 foreach (var item in clbForbiddenCategories.CheckedItems)
                 {
                     if (item is Category c)

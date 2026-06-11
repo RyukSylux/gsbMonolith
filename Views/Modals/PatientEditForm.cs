@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using gsbMonolith.Models;
@@ -77,7 +78,7 @@ namespace gsbMonolith.Views.Modals
             {
                 var catDAO = new gsbMonolith.DAO.CategoryDAO();
                 var categories = catDAO.GetAllCategories();
-                var list = new System.Collections.Generic.List<Category>();
+                var list = new List<Category>();
                 list.Add(new Category(0, "Aucune"));
                 list.AddRange(categories);
 
